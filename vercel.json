@@ -1,22 +1,12 @@
 {
   "functions": {
     "api/extract.py": {
-      "runtime": "python3.9",
+      "runtime": "vercel-python@latest",
       "maxDuration": 60
     },
     "api/generate.py": {
-      "runtime": "python3.9",
+      "runtime": "vercel-python@latest",
       "maxDuration": 60
     }
-  },
-  "rewrites": [
-    {
-      "source": "/api/extract",
-      "destination": "/api/extract.py"
-    },
-    {
-      "source": "/api/generate",
-      "destination": "/api/generate.py"
-    }
-  ]
+  }
 }
