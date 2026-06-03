@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/extract.py": {
+      "maxDuration": 60
+    },
+    "api/generate.py": {
+      "maxDuration": 60
+    }
+  }
+}
