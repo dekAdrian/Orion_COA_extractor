@@ -102,9 +102,9 @@ function App() {
       const block=isPdf
         ?{type:"document",source:{type:"base64",media_type:"application/pdf",data:fileB64}}
         :{type:"image",source:{type:"base64",media_type:file.type||"image/jpeg",data:fileB64}};
-      const resp=await fetch("https://api.anthropic.com/v1/messages",{
+      const resp=await fetch("/api/proxy",{
         method:"POST",
-        headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-allow-browser":"true"},
+        headers:{"Content-Type":"application/json","x-api-key":apiKey},
         body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,
           messages:[{role:"user",content:[block,{type:"text",text:buildPrompt(file.name)}]}]})
       });
