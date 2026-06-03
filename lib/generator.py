@@ -23,7 +23,7 @@ LOGO_B64 = "UklGRhoeAABXRUJQVlA4WAoAAAAQAAAA6AIAAwEAQUxQSHAPAAABHARt2yYJf9bffp1B
 # ── Farby ─────────────────────────────────────────────────────────────────────
 PRI        = "3D2B6B"
 WHITE      = "FFFFFF"
-PARAM_ODD  = "F0EDF8"
+PARAM_ODD  = "F7F7F7"
 PARAM_EVEN = "FFFFFF"
 BORDER     = "CCCCCC"
 TEXT       = "1A1A1A"
@@ -58,10 +58,12 @@ def _est_h(txt, w, base=15, mn=15):
 
 def _logo_png():
     logo_bytes = base64.b64decode(LOGO_B64)
-    pil = PILImage.open(io.BytesIO(logo_bytes)).convert("RGB")
-    pil2x = pil.resize((pil.width*2, pil.height*2), PILImage.LANCZOS)
+    pil = PILImage.open(io.BytesIO(logo_bytes)).convert("RGBA")
+    bg = PILImage.new("RGBA", pil.size, (255,255,255,255))
+    bg.paste(pil, mask=pil.split()[3])
+    final = bg.convert("RGB")
     tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
-    pil2x.save(tmp.name, "PNG")
+    final.save(tmp.name, "PNG", optimize=False)
     return tmp.name
 
 def _calc_layout(data):
@@ -391,7 +393,10 @@ def generate_xlsx(data, output_path):
     ws.page_setup.fitToWidth = 1
     ws.page_margins = PageMargins(left=0.55, right=0.55, top=0.55, bottom=0.55)
     wb.save(output_path)
-    os.unlink(lp)
+    try:
+        os.unlink(lp)
+    except:
+        pass
     return output_path
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -674,8 +679,7 @@ def generate_pdf(data, output_path):
         ml.append(mr(l1,v1)); mr_list.append(mr(l2,v2))
 
     meta_rows = [[l[0],l[1],r[0],r[1]] for l,r in zip(ml,mr_list)]
-    cq = cw/4
-    mt = Table(meta_rows, colWidths=[cq*0.45,cq*0.55,cq*0.45,cq*0.55])
+    mt = Table(meta_rows, colWidths=[cw*0.18,cw*0.32,cw*0.18,cw*0.32])
     mt.setStyle(TableStyle([
         ("BACKGROUND",(0,0),(-1,-1),LIGHT_RL),
         ("GRID",(0,0),(-1,-1),0.5,BORDER_RL),
