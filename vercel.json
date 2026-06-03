@@ -1,11 +1,9 @@
 {
   "functions": {
     "api/extract.py": {
-      "runtime": "vercel-python@latest",
       "maxDuration": 60
     },
     "api/generate.py": {
-      "runtime": "vercel-python@latest",
       "maxDuration": 60
     }
   }
