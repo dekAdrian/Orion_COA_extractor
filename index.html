@@ -1,16 +1,349 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ORIN CoA Extractor</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORIN CoA Extractor</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;background:#F0ECF8;color:#1A0A33;min-height:100vh}
+
+/* Header */
+.hdr{background:linear-gradient(135deg,#3D2B6B,#6B4FA0);height:60px;display:flex;align-items:center;padding:0 32px;box-shadow:0 2px 16px rgba(61,43,107,0.3)}
+.hdr img{height:32px;filter:brightness(0) invert(1)}
+.hdr-badge{margin-left:auto;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:4px 14px;border-radius:20px;font-size:11px;letter-spacing:2px;text-transform:uppercase}
+
+/* Layout */
+.wrap{max-width:760px;margin:0 auto;padding:32px 20px}
+h1{font-size:24px;font-weight:700;color:#3D2B6B;margin-bottom:4px}
+.sub{color:#7A6A92;font-size:13px;margin-bottom:28px}
+
+/* Card */
+.card{background:#fff;border:1px solid #D5C5EC;border-radius:12px;padding:24px 28px;margin-bottom:18px;box-shadow:0 2px 12px rgba(61,43,107,0.06)}
+.sec{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #F0ECF8;display:flex;align-items:center;gap:8px}
+.num{background:#3D2B6B;color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+
+/* Upload */
+.upz{border:2px dashed #C9A8F0;border-radius:10px;padding:44px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:#F8F5FD}
+.upz:hover,.upz.drag{border-color:#3D2B6B;background:#EAE0F8}
+.upz-icon{font-size:40px;margin-bottom:10px;display:block}
+.upz-title{font-size:15px;font-weight:600;color:#3D2B6B;margin-bottom:5px}
+.upz-sub{font-size:12px;color:#7A6A92}
+.chip{display:inline-flex;align-items:center;gap:8px;background:#F0ECF8;border:1px solid #D5C5EC;border-radius:20px;padding:5px 14px;font-size:12px;color:#3D2B6B;font-weight:500;margin-top:12px}
+
+/* Buttons */
+.btn{background:linear-gradient(135deg,#3D2B6B,#6B4FA0);color:#fff;border:none;border-radius:8px;padding:11px 28px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(61,43,107,0.25);font-family:inherit;transition:opacity 0.2s;margin-top:16px}
+.btn:hover{opacity:.85}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.dl-btn{background:transparent;color:#3D2B6B;border:1.5px solid #3D2B6B;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;align-items:center;gap:6px}
+.dl-btn:hover{background:#F0ECF8}
+.dl-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Status */
+.status{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;font-weight:500}
+.s-proc{background:#FFF8E1;border:1.5px solid #FFD54F;color:#6D4C00}
+.s-done{background:#E8F5E9;border:1.5px solid #81C784;color:#1B5E20}
+.s-err{background:#FCE4EC;border:1.5px solid #F48FB1;color:#880E2F}
+.s-warn{background:#FFF3E0;border:1.5px solid #FFB74D;color:#7D4000}
+.spin{width:14px;height:14px;flex-shrink:0;border:2px solid #FFD54F;border-top:2px solid #6D4C00;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Verification */
+.ver-box{background:#F8F5FD;border:1px solid #D5C5EC;border-radius:8px;padding:14px 16px;margin-bottom:16px}
+.ver-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:10px}
+.ver-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;padding:4px 0;border-bottom:1px solid #EDE7F6}
+.ver-item:last-child{border-bottom:none}
+.ver-icon{flex-shrink:0;margin-top:1px}
+.ver-ok{color:#2E7D32}
+.ver-warn{color:#E65100}
+.ver-err{color:#C62828}
+.ver-all-ok{color:#2E7D32;font-size:13px;display:flex;align-items:center;gap:6px}
+
+/* Chat */
+.chat-box{background:#F8F5FD;border:1px solid #D5C5EC;border-radius:8px;padding:14px;max-height:240px;overflow-y:auto;margin-bottom:12px}
+.msg{margin-bottom:10px;font-size:13px;line-height:1.5}
+.msg-user{text-align:right}
+.msg-user .bubble{background:#3D2B6B;color:#fff;display:inline-block;padding:7px 12px;border-radius:12px 12px 2px 12px;max-width:80%}
+.msg-ai .bubble{background:#fff;border:1px solid #D5C5EC;display:inline-block;padding:7px 12px;border-radius:12px 12px 12px 2px;max-width:80%;color:#1A0A33}
+.chat-input-row{display:flex;gap:8px}
+.chat-input{flex:1;border:1.5px solid #D5C5EC;border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;background:#fff}
+.chat-input:focus{border-color:#3D2B6B}
+.chat-send{background:#3D2B6B;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:600}
+.chat-send:hover{opacity:.85}
+.chat-send:disabled{opacity:.4;cursor:not-allowed}
+
+/* Info box */
+.info-box{background:#EDE7F6;border-radius:8px;padding:12px 16px;font-size:12px;color:#3D2B6B;margin-top:12px;line-height:1.6}
+.info-box strong{display:block;margin-bottom:4px}
+</style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="text/babel" src="app.js"></script>
+
+<div class="hdr">
+  <img src="data:image/webp;base64,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" alt="ORIN">
+  <span class="hdr-badge">CoA Extractor</span>
+</div>
+
+<div class="wrap">
+  <h1>Certificate of Analysis</h1>
+  <p class="sub">Nahrajte externý CoA &#8594; AI extrahuje a overí dáta &#8594; stiahnite XLSX / ODS / PDF</p>
+
+  <!-- STEP 1: Upload -->
+  <div class="card">
+    <div class="sec"><span class="num">1</span>Nahranie dokumentu</div>
+    <div class="upz" id="dropZone"
+      onclick="document.getElementById('fi').click()"
+      ondragover="ev.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleDrop(event)">
+      <span class="upz-icon">&#128196;</span>
+      <div class="upz-title">Pretiahnite súbor alebo kliknite pre výber</div>
+      <div class="upz-sub">PDF, JPG, PNG — externý certifikát od dodávateľa</div>
+    </div>
+    <input type="file" id="fi" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleFile(this.files[0])">
+    <div id="fileChip" style="display:none" class="chip">&#128206; <span id="fileName"></span></div>
+    <button class="btn" id="extractBtn" onclick="extract()" disabled>&#128269; Extrahovať a overiť</button>
+  </div>
+
+  <!-- STATUS -->
+  <div id="statusBar" style="display:none" class="status"></div>
+
+  <!-- STEP 2: Verifikácia + Chat + Download (zobrazí sa po extrakcii) -->
+  <div id="resultSection" style="display:none">
+
+    <!-- Verifikácia -->
+    <div class="card" id="verCard">
+      <div class="sec"><span class="num">2</span>Výsledok verifikácie</div>
+      <div id="verContent"></div>
+    </div>
+
+    <!-- Chat na dolaďovanie -->
+    <div class="card">
+      <div class="sec"><span class="num">3</span>Doladiť s AI</div>
+      <div class="chat-box" id="chatBox">
+        <div class="msg msg-ai">
+          <div class="bubble">Extrakcia je hotová. Ak niečo nesedí, napíšte mi čo zmeniť — napr. "Zmeň batch number na 08592-org" alebo "Pridaj parameter Vitamin C 50 mg/g".</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Napr: Zmeň retest date na Dec 2028..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" id="chatSend" onclick="sendChat()">Odoslať</button>
+      </div>
+    </div>
+
+    <!-- Download -->
+    <div class="card">
+      <div class="sec"><span class="num">4</span>Stiahnuť výstup</div>
+      <div class="btn-row">
+        <button class="dl-btn" onclick="download('xlsx')">&#8595; XLSX</button>
+        <button class="dl-btn" onclick="download('ods')">&#8595; ODS</button>
+        <button class="dl-btn" onclick="download('pdf')">&#8595; PDF</button>
+      </div>
+      <div class="info-box">
+        <strong>Tip:</strong>
+        XLSX / ODS otvorte v LibreOffice alebo Excel pre prípadné úpravy.<br>
+        PDF je určený na tlač a archiváciu — podpíše ho QA Manager.
+      </div>
+    </div>
+
+  </div><!-- end resultSection -->
+</div>
+
+<script>
+var currentFile = null;
+var currentData = null;
+var chatHistory = [];
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById("dropZone").classList.remove("drag");
+  handleFile(e.dataTransfer.files[0]);
+}
+
+function handleFile(f) {
+  if (!f) return;
+  var ok = ["application/pdf","image/jpeg","image/png","image/jpg"].includes(f.type)
+           || f.name.toLowerCase().endsWith(".pdf");
+  if (!ok) { showStatus("error","Podporované formáty: PDF, JPG, PNG"); return; }
+  currentFile = f;
+  document.getElementById("fileName").textContent = f.name + " (" + Math.round(f.size/1024) + " KB)";
+  document.getElementById("fileChip").style.display = "inline-flex";
+  document.getElementById("extractBtn").disabled = false;
+  document.getElementById("resultSection").style.display = "none";
+  hideStatus();
+}
+
+function toBase64(file) {
+  return new Promise(function(res,rej) {
+    var r = new FileReader();
+    r.onload = function(){ res(r.result.split(",")[1]); };
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function showStatus(type, msg) {
+  var el = document.getElementById("statusBar");
+  el.style.display = "flex";
+  el.className = "status s-" + type;
+  el.innerHTML = type === "proc" ? '<div class="spin"></div>' + msg : msg;
+}
+
+function hideStatus() {
+  document.getElementById("statusBar").style.display = "none";
+}
+
+async function extract() {
+  if (!currentFile) return;
+  document.getElementById("extractBtn").disabled = true;
+  document.getElementById("resultSection").style.display = "none";
+  chatHistory = [];
+  showStatus("proc", "Claude číta certifikát, extrahuje a overuje dáta&#8230;");
+
+  try {
+    var b64 = await toBase64(currentFile);
+    var resp = await fetch("/api/extract", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        file_b64: b64,
+        file_type: currentFile.type || "application/pdf",
+        filename: currentFile.name,
+        chat_history: [],
+        current_data: null
+      })
+    });
+    var json = await resp.json();
+    if (!resp.ok || json.error) throw new Error(json.error || "API error");
+
+    currentData = json.data;
+    chatHistory = [];
+    renderVerification(currentData);
+    document.getElementById("chatBox").innerHTML = '<div class="msg msg-ai"><div class="bubble">Extrakcia je hotová. Ak niečo nesedí, napíšte mi čo zmeniť.</div></div>';
+    document.getElementById("resultSection").style.display = "block";
+
+    var ver = currentData.verification || {};
+    if (ver.has_errors) {
+      showStatus("warn", "&#9888; Extrakcia dokončená, ale niektoré hodnoty vyžadujú kontrolu — pozrite sekciu Verifikácia.");
+    } else {
+      showStatus("done", "&#10003; Extrakcia a verifikácia úspešná — môžete stiahnuť výstup.");
+    }
+  } catch(e) {
+    showStatus("err", "&#9888; " + e.message);
+  }
+  document.getElementById("extractBtn").disabled = false;
+}
+
+function renderVerification(data) {
+  var ver = data.verification || {};
+  var issues = ver.issues || [];
+  var html = "";
+
+  if (issues.length === 0) {
+    html = '<div class="ver-all-ok">&#10003; Všetky povinné polia sú vyplnené a hodnoty sú v rozsahu.</div>';
+  } else {
+    html = '<div class="ver-box"><div class="ver-title">Nájdené upozornenia</div>';
+    for (var i=0; i<issues.length; i++) {
+      var it = issues[i];
+      html += '<div class="ver-item"><span class="ver-icon ver-err">&#9888;</span><span>' + (it.param || it.field || "") + " — " + (it.note || "") + '</span></div>';
+    }
+    html += "</div>";
+  }
+
+  // Súhrn extrakcie
+  html += '<div style="font-size:12px;color:#7A6A92;margin-top:10px;line-height:1.8">';
+  html += '<strong style="color:#3D2B6B;font-size:11px;letter-spacing:1px;text-transform:uppercase">Extrahované dáta</strong><br>';
+  html += "<b>Produkt:</b> " + (data.commonName||"—") + "<br>";
+  html += "<b>Šarža:</b> " + (data.batchNumber||"—") + " &nbsp;|&nbsp; ";
+  html += "<b>Výroba:</b> " + (data.manufacturingDate||"—") + " &nbsp;|&nbsp; ";
+  html += "<b>Retest:</b> " + (data.retestDate||"—") + "<br>";
+  html += "<b>Dodávateľ:</b> " + (data.supplier||"—") + "<br>";
+  html += "<b>Parametrov:</b> " + (data.parameters||[]).length;
+  html += "</div>";
+
+  document.getElementById("verContent").innerHTML = html;
+}
+
+async function sendChat() {
+  var input = document.getElementById("chatInput");
+  var msg = input.value.trim();
+  if (!msg || !currentData) return;
+
+  input.value = "";
+  document.getElementById("chatSend").disabled = true;
+  addChatMsg("user", msg);
+  addChatMsg("ai", "&#8230;", "typing");
+  chatHistory.push({role:"user", content: msg});
+
+  try {
+    var resp = await fetch("/api/extract", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        file_b64: "",
+        file_type: "",
+        filename: "",
+        chat_history: chatHistory,
+        current_data: currentData
+      })
+    });
+    var json = await resp.json();
+    if (!resp.ok || json.error) throw new Error(json.error || "API error");
+
+    currentData = json.data;
+    removeLast();
+    chatHistory.push({role:"assistant", content:"Hotovo, dáta som aktualizoval."});
+    addChatMsg("ai", "Hotovo! Dáta som aktualizoval. Môžete stiahnuť nový výstup.");
+    renderVerification(currentData);
+  } catch(e) {
+    removeLast();
+    addChatMsg("ai", "&#9888; Chyba: " + e.message);
+  }
+  document.getElementById("chatSend").disabled = false;
+}
+
+function addChatMsg(role, text, id) {
+  var box = document.getElementById("chatBox");
+  var div = document.createElement("div");
+  div.className = "msg msg-" + role;
+  if (id) div.id = id;
+  div.innerHTML = '<div class="bubble">' + text + "</div>";
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function removeLast() {
+  var box = document.getElementById("chatBox");
+  var typing = document.getElementById("typing");
+  if (typing) typing.remove();
+  else if (box.lastChild) box.removeChild(box.lastChild);
+}
+
+async function download(fmt) {
+  if (!currentData) return;
+  showStatus("proc", "Generujem " + fmt.toUpperCase() + "&#8230;");
+  try {
+    var resp = await fetch("/api/generate", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({format: fmt, data: currentData})
+    });
+    if (!resp.ok) {
+      var err = await resp.json();
+      throw new Error(err.error || "Chyba generovania");
+    }
+    var blob = await resp.blob();
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement("a");
+    a.href   = url;
+    a.download = "ORIN_CoA_" + (currentData.batchNumber||"export") + "." + fmt;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    hideStatus();
+  } catch(e) {
+    showStatus("err", "&#9888; " + e.message);
+  }
+}
+</script>
 </body>
 </html>
