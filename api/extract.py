@@ -13,15 +13,21 @@ LEARNED FROM ORIN INTERNAL TEMPLATES (3 examples studied):
 2. Algae Oil: Parameter | Unit | Min/Max | Result (unit column, footnotes 1 2, sections)
 3. HPMC Capsules: Analytical data | Test method | Specification | Result (method column)
 
-ALWAYS EXCLUDE from output:
-- Supplier name, manufacturer name, laboratory name
+ALWAYS EXCLUDE from output (put in excluded list, NOT in extraMeta):
+- Supplier name, manufacturer name, laboratory name, distributor name
 - Country of origin
-- writtenBy, approvedBy, signedBy, analyzedBy
-- sampleAcceptance, testingPeriod, dateOfSampling
-- Laboratory order numbers, sample numbers, report numbers
-- Detailed fatty acid APPENDIX tables (long lists of individual acids C4:0, C6:0... from lab report appendix pages) - these are lab detail, NOT primary specs
-- Laboratory accreditation info, RvA accreditation numbers
+- writtenBy, approvedBy, signedBy, analyzedBy, checkedBy, controlledBy
+- Kontroloval, Skontroloval, Vystavil, Schvalil, Vydal (Slovak/Czech lab personnel)
+- sampleAcceptance, testingPeriod, dateOfSampling, dateOfTesting
+- Laboratory order numbers, sample numbers, report numbers, customer numbers
+- Detailed fatty acid APPENDIX tables (long lists C4:0, C6:0... from appendix pages)
+- Laboratory accreditation info, RvA numbers
+- Any person name associated with lab work (analyst, QC manager signatures)
 
+ALWAYS INCLUDE in extraMeta (product-specific fields ONLY):
+- Body Colour, CAP Colour, Opacity, Body Printing, CAP Printing (capsules)
+- Antioxidants, Colorant (oils)
+- Composition (product composition, not lab info)
 ALWAYS INCLUDE fatty acids that ARE primary specifications:
 - C8:0 Caprylic, C10:0 Capric (if listed as primary spec with min/max)
 - DHA %, EPA %, Total omega-3 (if listed as primary spec)
