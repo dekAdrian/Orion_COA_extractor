@@ -44,7 +44,7 @@ h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
 /* Card */
 .card{background:#fff;border:1px solid #D5C5EC;border-radius:12px;padding:22px 26px;margin-bottom:16px;box-shadow:0 2px 10px rgba(61,43,107,0.05)}
 .sec{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3D2B6B;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #F0ECF8;display:flex;align-items:center;gap:7px}
-.num{background:#3D2B6B;color:#fff;width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.num{background:#3D2B6B;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;box-shadow:0 2px 8px rgba(61,43,107,0.3)}
 
 /* Upload */
 .upz{border:2px dashed #C9A8F0;border-radius:10px;padding:36px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:#F8F5FD}
@@ -127,9 +127,21 @@ h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
     <!-- Result -->
     <div id="resultSection" style="display:none">
 
+      <!-- Download -->
+      <div class="card">
+        <div class="sec"><span class="num">2</span>Stiahnuť výstup</div>
+        <div class="btn-row">
+          <button class="dl-btn" onclick="download('xlsx')">&#8595; Stiahnuť XLSX</button>
+          <button class="ver-btn" onclick="showVerReport()">&#128203; Ver. report</button>
+        </div>
+        <div class="info-box">
+          XLSX / ODS &#8594; otvorte v LibreOffice pre úpravy &nbsp;|&nbsp; PDF &#8594; tlač a archivácia
+        </div>
+      </div>
+
       <!-- Chat -->
       <div class="card">
-        <div class="sec"><span class="num">2</span>Doladiť s AI</div>
+        <div class="sec"><span class="num">3</span>Doladiť s AI</div>
         <div class="chat-box" id="chatBox">
           <div class="msg msg-ai">
             <div class="bubble">Extrakcia hotová. Napíšte čo chcete zmeniť — napr. "Zmeň batch number na X" alebo "Pridaj parameter Y".</div>
@@ -140,20 +152,6 @@ h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
             placeholder="Napr: Zmeň retest date na Dec 2028..."
             onkeydown="if(event.key==='Enter')sendChat()">
           <button class="chat-send" id="chatSend" onclick="sendChat()">&#10148;</button>
-        </div>
-      </div>
-
-      <!-- Download -->
-      <div class="card">
-        <div class="sec"><span class="num">3</span>Stiahnuť výstup</div>
-        <div class="btn-row">
-          <button class="dl-btn" onclick="download('xlsx')">&#8595; XLSX</button>
-          <button class="dl-btn" onclick="download('ods')">&#8595; ODS</button>
-          <button class="dl-btn" onclick="download('pdf')">&#8595; PDF</button>
-          <button class="ver-btn" onclick="showVerReport()">&#128203; Ver. report</button>
-        </div>
-        <div class="info-box">
-          XLSX / ODS &#8594; otvorte v LibreOffice pre úpravy &nbsp;|&nbsp; PDF &#8594; tlač a archivácia
         </div>
       </div>
 
@@ -420,6 +418,7 @@ function showVerReport() {
   var issues = ver.issues || [];
   var params = currentData.parameters || [];
   var excluded = currentData.excluded || [];
+  var d = currentData;
 
   var pass = params.filter(function(p){ return p.status==="pass"; }).length;
   var fail = params.filter(function(p){ return p.status==="fail"; }).length;
@@ -427,25 +426,56 @@ function showVerReport() {
 
   var html = "";
 
-  // Zakladne info
+  // ── METADATA SEKCIA ──────────────────────────────────────────────────────
   html += "<div style='background:#F8F5FD;border-radius:10px;padding:14px;margin-bottom:16px'>";
-  html += "<div style='font-size:13px;font-weight:700;color:#3D2B6B;margin-bottom:6px'>" + (currentData.commonName||"—") + "</div>";
-  html += "<div style='font-size:11px;color:#7A6A92'>";
-  html += "<b>Šarža:</b> " + (currentData.batchNumber||"—") + " &nbsp;|&nbsp; ";
-  html += "<b>Výroba:</b> " + (currentData.manufacturingDate||"—") + " &nbsp;|&nbsp; ";
-  html += "<b>Retest:</b> " + (currentData.retestDate||"—");
+  html += "<div style='font-size:13px;font-weight:700;color:#3D2B6B;margin-bottom:10px'>" + (d.commonName||"—") + "</div>";
+  
+  // Grid metadat
+  var metaFields = [
+    ["Šarža",           d.batchNumber],
+    ["Kód produktu",    d.productCode],
+    ["Dátum výroby",    d.manufacturingDate],
+    ["Retest / Expiry", d.retestDate],
+    ["Druh / Species",  d.species],
+    ["Trvanlivosť",     d.shelfLife],
+    ["Alergény",        d.allergens],
+    ["GMO",             d.gmo],
+    ["Kosher",          d.kosher],
+  ];
+  // Pridame extraMeta
+  var extra = d.extraMeta || {};
+  for (var k in extra) {
+    if (extra[k]) metaFields.push([k, extra[k]]);
+  }
+
+  html += "<div style='display:grid;grid-template-columns:1fr 1fr;gap:4px'>";
+  for (var i=0; i<metaFields.length; i++) {
+    var label = metaFields[i][0];
+    var val   = metaFields[i][1];
+    if (!val) continue;
+    html += "<div style='font-size:11px;padding:3px 0;border-bottom:1px solid #EDE7F6'>";
+    html += "<span style='color:#7A6A92;font-weight:600'>" + label + ":</span> ";
+    html += "<span style='color:#1A0A33'>" + val + "</span>";
+    html += "</div>";
+  }
   html += "</div></div>";
 
-  // Statistiky
+  // ── STATISTIKY ────────────────────────────────────────────────────────────
   html += "<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px'>";
-  html += "<div style='background:#E8F5E9;border-radius:8px;padding:12px;text-align:center'><div style='font-size:26px;font-weight:700;color:#2E7D32'>" + pass + "</div><div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>PASS</div></div>";
-  html += "<div style='background:" + (fail>0?"#FCE4EC":"#F5F5F5") + ";border-radius:8px;padding:12px;text-align:center'><div style='font-size:26px;font-weight:700;color:" + (fail>0?"#C62828":"#BDBDBD") + "'>" + fail + "</div><div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>FAIL</div></div>";
-  html += "<div style='background:#F5F5F5;border-radius:8px;padding:12px;text-align:center'><div style='font-size:26px;font-weight:700;color:#9E9E9E'>" + info + "</div><div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>INFO</div></div>";
+  html += "<div style='background:#E8F5E9;border-radius:8px;padding:12px;text-align:center'>";
+  html += "<div style='font-size:26px;font-weight:700;color:#2E7D32'>" + pass + "</div>";
+  html += "<div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>PASS</div></div>";
+  html += "<div style='background:" + (fail>0?"#FCE4EC":"#F5F5F5") + ";border-radius:8px;padding:12px;text-align:center'>";
+  html += "<div style='font-size:26px;font-weight:700;color:" + (fail>0?"#C62828":"#BDBDBD") + "'>" + fail + "</div>";
+  html += "<div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>FAIL</div></div>";
+  html += "<div style='background:#F5F5F5;border-radius:8px;padding:12px;text-align:center'>";
+  html += "<div style='font-size:26px;font-weight:700;color:#9E9E9E'>" + info + "</div>";
+  html += "<div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>INFO</div></div>";
   html += "</div>";
 
-  // Verifikacne problemy
+  // ── PROBLEMY ──────────────────────────────────────────────────────────────
   if (issues.length > 0) {
-    html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C62828;margin-bottom:8px'>⚠ Problémy</div>";
+    html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C62828;margin-bottom:8px'>Problémy</div>";
     for (var i=0; i<issues.length; i++) {
       html += "<div style='background:#FFF5F5;border-left:3px solid #C62828;padding:8px 10px;margin-bottom:6px;font-size:12px;border-radius:0 6px 6px 0'>";
       html += "<b style='color:#C62828'>" + (issues[i].param||issues[i].field||"") + "</b><br>";
@@ -454,31 +484,27 @@ function showVerReport() {
     }
     html += "<div style='margin-bottom:14px'></div>";
   } else {
-    html += "<div style='background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;font-size:12px;color:#2E7D32;font-weight:600;margin-bottom:16px'>✓ Všetky hodnoty v poriadku</div>";
+    html += "<div style='background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;font-size:12px;color:#2E7D32;font-weight:600;margin-bottom:16px'>Všetky hodnoty v poriadku</div>";
   }
 
-  // Texty z dokumentu
+  // ── TEXTY Z DOKUMENTU ─────────────────────────────────────────────────────
   var texts = [];
-  if (currentData.description) texts.push({label:"Popis produktu", val: currentData.description, icon:"📄"});
-  if (currentData.storageConditions) texts.push({label:"Skladovanie", val: currentData.storageConditions, icon:"🌡"});
-  if (currentData.notes) texts.push({label:"Poznámky", val: currentData.notes, icon:"📝"});
-  if (currentData.allergens) texts.push({label:"Alergény", val: currentData.allergens, icon:"⚠"});
-  if (currentData.gmo) texts.push({label:"GMO", val: currentData.gmo, icon:"🧬"});
-  if (currentData.kosher) texts.push({label:"Kosher", val: currentData.kosher, icon:"✡"});
-  if (currentData.shelfLife) texts.push({label:"Trvanlivosť", val: currentData.shelfLife, icon:"📅"});
+  if (d.description)        texts.push({label:"Popis produktu",  val:d.description,        icon:"Popis"});
+  if (d.storageConditions)  texts.push({label:"Skladovanie",      val:d.storageConditions,  icon:"Sklad."});
+  if (d.notes)              texts.push({label:"Poznámky",         val:d.notes,              icon:"Pozn."});
 
   if (texts.length > 0) {
-    html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:10px'>📝 Texty z dokumentu</div>";
+    html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:10px'>Texty z dokumentu</div>";
     for (var i=0; i<texts.length; i++) {
       html += "<div style='margin-bottom:10px'>";
-      html += "<div style='font-size:10px;font-weight:700;color:#7A6A92;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px'>" + texts[i].icon + " " + texts[i].label + "</div>";
-      html += "<div style='font-size:12px;color:#1A0A33;background:#F8F5FD;padding:8px 10px;border-radius:6px;line-height:1.5'>" + texts[i].val + "</div>";
+      html += "<div style='font-size:10px;font-weight:700;color:#7A6A92;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px'>" + texts[i].label + "</div>";
+      html += "<div style='font-size:11px;color:#1A0A33;background:#F8F5FD;padding:8px 10px;border-radius:6px;line-height:1.5'>" + texts[i].val + "</div>";
       html += "</div>";
     }
     html += "<div style='margin-bottom:14px'></div>";
   }
 
-  // Dva zoznamy - preslo vs vylucene
+  // ── PRESLO vs VYLUCENE ────────────────────────────────────────────────────
   var reasonLabels = {
     "supplier_info":"Dodávateľ","lab_info":"Lab. info",
     "lab_appendix":"Lab. appendix","lab_personnel":"Lab. personál",
@@ -489,7 +515,7 @@ function showVerReport() {
 
   // Preslo
   html += "<div>";
-  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2E7D32;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E8F5E9'>✓ Prešlo (" + params.length + ")</div>";
+  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2E7D32;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E8F5E9'>Prešlo (" + params.length + ")</div>";
   for (var i=0; i<params.length; i++) {
     var p = params[i];
     var icon = p.status==="pass"?"✓":p.status==="fail"?"✗":"·";
@@ -501,19 +527,17 @@ function showVerReport() {
   }
   html += "</div>";
 
-  // Vylucene - zoskupene podla dovodu
+  // Vylucene - zoskupene
   html += "<div>";
-  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C62828;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #FCE4EC'>✗ Vylúčené</div>";
+  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C62828;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #FCE4EC'>Vylúčené</div>";
   if (excluded.length === 0) {
     html += "<div style='font-size:11px;color:#7A6A92;font-style:italic;padding:6px 0'>Žiadne vylúčené</div>";
   } else {
-    // Zoskupime podla reason
     var groups = {};
     for (var i=0; i<excluded.length; i++) {
-      var ex = excluded[i];
-      var reason = ex.reason || "other";
+      var reason = excluded[i].reason || "other";
       if (!groups[reason]) groups[reason] = [];
-      groups[reason].push(ex);
+      groups[reason].push(excluded[i]);
     }
     for (var reason in groups) {
       var items = groups[reason];
@@ -531,7 +555,6 @@ function showVerReport() {
     }
   }
   html += "</div>";
-
   html += "</div>"; // end grid
 
   document.getElementById("verReportContent").innerHTML = html;
