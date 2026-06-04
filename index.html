@@ -188,25 +188,120 @@ h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
 
 </div><!-- end layout -->
 
-<!-- VER REPORT POPUP -->
-<div id="verPopup" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:14px;padding:28px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.2)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-size:14px;font-weight:700;color:#3D2B6B">&#128203; Verifikačný report</div>
-      <button onclick="closeVerReport()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#7A6A92">&#10005;</button>
+<!-- VER REPORT POPUP - full screen s PDF viewerom -->
+<div id="verPopup" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:200;align-items:stretch;justify-content:stretch">
+  <div style="display:grid;grid-template-columns:1fr 420px;width:100%;height:100%;background:#1A0A33">
+
+    <!-- LAVA STRANA: PDF viewer -->
+    <div style="display:flex;flex-direction:column;border-right:1px solid #3D2B6B">
+      <div style="background:#2D1557;padding:12px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0">
+        <div style="color:#C9A8F0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Pôvodný dokument</div>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <button onclick="pdfPrevPage()" style="background:#3D2B6B;color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px">&#8592;</button>
+          <span id="pdfPageInfo" style="color:#C9A8F0;font-size:12px">1 / 1</span>
+          <button onclick="pdfNextPage()" style="background:#3D2B6B;color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px">&#8594;</button>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:16px;background:#111">
+        <canvas id="pdfCanvas" style="max-width:100%;box-shadow:0 4px 20px rgba(0,0,0,0.5)"></canvas>
+        <div id="pdfPlaceholder" style="color:#7A6A92;font-size:13px;text-align:center;padding:60px 20px">
+          <div style="font-size:40px;margin-bottom:12px">&#128196;</div>
+          <div>PDF náhľad dostupný len pre PDF súbory</div>
+          <div style="font-size:11px;margin-top:6px;color:#5A4A72">JPEG/PNG súbory sa tu nezobrazujú</div>
+        </div>
+      </div>
     </div>
-    <div id="verReportContent"></div>
-    <div style="margin-top:16px;text-align:right">
-      <button onclick="closeVerReport()" style="background:linear-gradient(135deg,#3D2B6B,#6B4FA0);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer">Zavrieť</button>
+
+    <!-- PRAVA STRANA: Report -->
+    <div style="display:flex;flex-direction:column;background:#fff">
+      <div style="background:#2D1557;padding:12px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+        <div style="color:#C9A8F0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase">&#128203; Verifikačný report</div>
+        <button onclick="closeVerReport()" style="margin-left:auto;background:rgba(255,255,255,0.1);border:none;color:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:14px">&#10005;</button>
+      </div>
+      <div id="verReportContent" style="flex:1;overflow-y:auto;padding:16px"></div>
     </div>
+
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 var currentFile = null;
 var currentData = null;
 var chatHistory = [];
 const HIST_KEY = "orin_coa_history";
+
+// PDF.js viewer
+var pdfDoc = null;
+var pdfPage = 1;
+var pdfScale = 1.5;
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+function renderPdfPage(num) {
+  if (!pdfDoc) return;
+  pdfDoc.getPage(num).then(function(page) {
+    var canvas = document.getElementById("pdfCanvas");
+    var ctx = canvas.getContext("2d");
+    var viewport = page.getViewport({scale: pdfScale});
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    page.render({canvasContext: ctx, viewport: viewport});
+    document.getElementById("pdfPageInfo").textContent = num + " / " + pdfDoc.numPages;
+  });
+}
+
+function pdfNextPage() {
+  if (!pdfDoc || pdfPage >= pdfDoc.numPages) return;
+  pdfPage++;
+  renderPdfPage(pdfPage);
+}
+
+function pdfPrevPage() {
+  if (!pdfDoc || pdfPage <= 1) return;
+  pdfPage--;
+  renderPdfPage(pdfPage);
+}
+
+function loadPdfForViewer() {
+  var canvas = document.getElementById("pdfCanvas");
+  var placeholder = document.getElementById("pdfPlaceholder");
+  
+  if (!currentFile) {
+    canvas.style.display = "none";
+    placeholder.style.display = "block";
+    return;
+  }
+  
+  var isPdf = currentFile.type === "application/pdf" || 
+              currentFile.name.toLowerCase().endsWith(".pdf");
+  
+  if (!isPdf) {
+    canvas.style.display = "none";
+    placeholder.style.display = "block";
+    placeholder.innerHTML = '<div style="font-size:36px;margin-bottom:12px">&#128247;</div><div style="color:#7A6A92;font-size:13px">Obrázok — náhľad nie je dostupný</div>';
+    return;
+  }
+  
+  placeholder.style.display = "none";
+  canvas.style.display = "block";
+  pdfPage = 1;
+  
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var typedArray = new Uint8Array(e.target.result);
+    pdfjsLib.getDocument(typedArray).promise.then(function(doc) {
+      pdfDoc = doc;
+      renderPdfPage(1);
+    }).catch(function(err) {
+      console.error("PDF load error:", err);
+      canvas.style.display = "none";
+      placeholder.style.display = "block";
+      placeholder.innerHTML = '<div style="color:#C62828;font-size:13px">Chyba pri načítaní PDF</div>';
+    });
+  };
+  reader.readAsArrayBuffer(currentFile);
+}
 
 function handleDrop(e) {
   e.preventDefault();
@@ -325,6 +420,7 @@ function renderVerSidebar(data) {
 
 function showVerReport() {
   if (!currentData) return;
+  loadPdfForViewer();
   var ver = currentData.verification || {};
   var issues = ver.issues || [];
   var params = currentData.parameters || [];
@@ -401,6 +497,8 @@ function showVerReport() {
 
 function closeVerReport() {
   document.getElementById("verPopup").style.display = "none";
+  pdfDoc = null;
+  pdfPage = 1;
 }
 
 // História
