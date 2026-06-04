@@ -9,73 +9,91 @@
 body{font-family:"Segoe UI",system-ui,sans-serif;background:#F0ECF8;color:#1A0A33;min-height:100vh}
 
 /* Header */
-.hdr{background:linear-gradient(135deg,#3D2B6B,#6B4FA0);height:60px;display:flex;align-items:center;padding:0 32px;box-shadow:0 2px 16px rgba(61,43,107,0.3)}
-.hdr img{height:32px;filter:brightness(0) invert(1)}
-.hdr-badge{margin-left:auto;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:4px 14px;border-radius:20px;font-size:11px;letter-spacing:2px;text-transform:uppercase}
+.hdr{background:linear-gradient(135deg,#3D2B6B,#6B4FA0);height:58px;display:flex;align-items:center;padding:0 28px;box-shadow:0 2px 16px rgba(61,43,107,0.3);position:sticky;top:0;z-index:100}
+.hdr img{height:30px;filter:brightness(0) invert(1)}
+.hdr-badge{margin-left:12px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:3px 12px;border-radius:20px;font-size:10px;letter-spacing:2px;text-transform:uppercase}
 
 /* Layout */
-.wrap{max-width:760px;margin:0 auto;padding:32px 20px}
-h1{font-size:24px;font-weight:700;color:#3D2B6B;margin-bottom:4px}
-.sub{color:#7A6A92;font-size:13px;margin-bottom:28px}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:0;min-height:calc(100vh - 58px)}
+
+/* Main */
+.main{padding:28px 24px;overflow-y:auto}
+h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
+.sub{color:#7A6A92;font-size:13px;margin-bottom:24px}
+
+/* Sidebar */
+.sidebar{background:#fff;border-left:1px solid #D5C5EC;padding:20px 16px;overflow-y:auto}
+.sb-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3D2B6B;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #F0ECF8;display:flex;align-items:center;gap:6px}
+
+/* Ver report box */
+.ver-summary{background:#F8F5FD;border:1px solid #D5C5EC;border-radius:8px;padding:12px;margin-bottom:16px}
+.ver-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px;border-bottom:1px solid #EDE7F6}
+.ver-row:last-child{border-bottom:none}
+.ver-label{color:#7A6A92}
+.ver-pass{color:#2E7D32;font-weight:700}
+.ver-fail{color:#C62828;font-weight:700}
+.ver-check{color:#E65100;font-weight:700}
+.ver-empty{color:#7A6A92;font-size:12px;font-style:italic;text-align:center;padding:12px 0}
+.ver-issues{margin-top:10px}
+.ver-issue{font-size:11px;color:#C62828;padding:3px 0;border-bottom:1px solid #FCE4EC;line-height:1.4}
+.ver-issue:last-child{border-bottom:none}
+
+/* History */
+.hist-item{background:#F8F5FD;border:1px solid #D5C5EC;border-radius:6px;padding:9px 10px;margin-bottom:8px;cursor:pointer;transition:all 0.15s}
+.hist-item:hover{border-color:#3D2B6B;background:#EDE7F6}
+.hist-name{font-size:12px;font-weight:600;color:#3D2B6B;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-batch{font-size:11px;color:#7A6A92}
+.hist-date{font-size:10px;color:#B0A0C8;margin-top:2px}
+.hist-empty{color:#7A6A92;font-size:12px;font-style:italic;text-align:center;padding:16px 0}
+.hist-clear{font-size:10px;color:#C62828;cursor:pointer;float:right;margin-top:-2px;text-decoration:underline}
 
 /* Card */
-.card{background:#fff;border:1px solid #D5C5EC;border-radius:12px;padding:24px 28px;margin-bottom:18px;box-shadow:0 2px 12px rgba(61,43,107,0.06)}
-.sec{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #F0ECF8;display:flex;align-items:center;gap:8px}
-.num{background:#3D2B6B;color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.card{background:#fff;border:1px solid #D5C5EC;border-radius:12px;padding:22px 26px;margin-bottom:16px;box-shadow:0 2px 10px rgba(61,43,107,0.05)}
+.sec{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3D2B6B;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #F0ECF8;display:flex;align-items:center;gap:7px}
+.num{background:#3D2B6B;color:#fff;width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
 
 /* Upload */
-.upz{border:2px dashed #C9A8F0;border-radius:10px;padding:44px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:#F8F5FD}
+.upz{border:2px dashed #C9A8F0;border-radius:10px;padding:36px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:#F8F5FD}
 .upz:hover,.upz.drag{border-color:#3D2B6B;background:#EAE0F8}
-.upz-icon{font-size:40px;margin-bottom:10px;display:block}
-.upz-title{font-size:15px;font-weight:600;color:#3D2B6B;margin-bottom:5px}
+.upz-icon{font-size:36px;margin-bottom:8px;display:block}
+.upz-title{font-size:14px;font-weight:600;color:#3D2B6B;margin-bottom:4px}
 .upz-sub{font-size:12px;color:#7A6A92}
-.chip{display:inline-flex;align-items:center;gap:8px;background:#F0ECF8;border:1px solid #D5C5EC;border-radius:20px;padding:5px 14px;font-size:12px;color:#3D2B6B;font-weight:500;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:8px;background:#F0ECF8;border:1px solid #D5C5EC;border-radius:20px;padding:4px 12px;font-size:12px;color:#3D2B6B;font-weight:500;margin-top:10px}
 
 /* Buttons */
-.btn{background:linear-gradient(135deg,#3D2B6B,#6B4FA0);color:#fff;border:none;border-radius:8px;padding:11px 28px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(61,43,107,0.25);font-family:inherit;transition:opacity 0.2s;margin-top:16px}
+.btn{background:linear-gradient(135deg,#3D2B6B,#6B4FA0);color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(61,43,107,0.25);font-family:inherit;transition:opacity 0.2s;margin-top:14px}
 .btn:hover{opacity:.85}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.dl-btn{background:transparent;color:#3D2B6B;border:1.5px solid #3D2B6B;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;align-items:center;gap:6px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dl-btn{background:transparent;color:#3D2B6B;border:1.5px solid #3D2B6B;border-radius:8px;padding:9px 18px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;align-items:center;gap:5px}
 .dl-btn:hover{background:#F0ECF8}
 .dl-btn:disabled{opacity:.4;cursor:not-allowed}
+.ver-btn{background:#F0ECF8;color:#3D2B6B;border:1px solid #D5C5EC;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;align-items:center;gap:5px}
+.ver-btn:hover{background:#EDE7F6}
 
 /* Status */
-.status{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;font-weight:500}
+.status{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;margin-bottom:14px;font-size:13px;font-weight:500}
 .s-proc{background:#FFF8E1;border:1.5px solid #FFD54F;color:#6D4C00}
 .s-done{background:#E8F5E9;border:1.5px solid #81C784;color:#1B5E20}
-.s-err{background:#FCE4EC;border:1.5px solid #F48FB1;color:#880E2F}
 .s-warn{background:#FFF3E0;border:1.5px solid #FFB74D;color:#7D4000}
+.s-err{background:#FCE4EC;border:1.5px solid #F48FB1;color:#880E2F}
 .spin{width:14px;height:14px;flex-shrink:0;border:2px solid #FFD54F;border-top:2px solid #6D4C00;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Verification */
-.ver-box{background:#F8F5FD;border:1px solid #D5C5EC;border-radius:8px;padding:14px 16px;margin-bottom:16px}
-.ver-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:10px}
-.ver-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;padding:4px 0;border-bottom:1px solid #EDE7F6}
-.ver-item:last-child{border-bottom:none}
-.ver-icon{flex-shrink:0;margin-top:1px}
-.ver-ok{color:#2E7D32}
-.ver-warn{color:#E65100}
-.ver-err{color:#C62828}
-.ver-all-ok{color:#2E7D32;font-size:13px;display:flex;align-items:center;gap:6px}
-
 /* Chat */
-.chat-box{background:#F8F5FD;border:1px solid #D5C5EC;border-radius:8px;padding:14px;max-height:240px;overflow-y:auto;margin-bottom:12px}
-.msg{margin-bottom:10px;font-size:13px;line-height:1.5}
+.chat-box{background:#F8F5FD;border:1px solid #D5C5EC;border-radius:8px;padding:12px;max-height:200px;overflow-y:auto;margin-bottom:10px}
+.msg{margin-bottom:8px;font-size:12px;line-height:1.5}
 .msg-user{text-align:right}
-.msg-user .bubble{background:#3D2B6B;color:#fff;display:inline-block;padding:7px 12px;border-radius:12px 12px 2px 12px;max-width:80%}
-.msg-ai .bubble{background:#fff;border:1px solid #D5C5EC;display:inline-block;padding:7px 12px;border-radius:12px 12px 12px 2px;max-width:80%;color:#1A0A33}
-.chat-input-row{display:flex;gap:8px}
-.chat-input{flex:1;border:1.5px solid #D5C5EC;border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;background:#fff}
+.msg-user .bubble{background:#3D2B6B;color:#fff;display:inline-block;padding:6px 10px;border-radius:10px 10px 2px 10px;max-width:85%}
+.msg-ai .bubble{background:#fff;border:1px solid #D5C5EC;display:inline-block;padding:6px 10px;border-radius:10px 10px 10px 2px;max-width:85%;color:#1A0A33}
+.chat-row{display:flex;gap:7px}
+.chat-input{flex:1;border:1.5px solid #D5C5EC;border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;outline:none;transition:border-color .2s;background:#fff}
 .chat-input:focus{border-color:#3D2B6B}
-.chat-send{background:#3D2B6B;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:600}
+.chat-send{background:#3D2B6B;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600}
 .chat-send:hover{opacity:.85}
 .chat-send:disabled{opacity:.4;cursor:not-allowed}
 
-/* Info box */
-.info-box{background:#EDE7F6;border-radius:8px;padding:12px 16px;font-size:12px;color:#3D2B6B;margin-top:12px;line-height:1.6}
-.info-box strong{display:block;margin-bottom:4px}
+.info-box{background:#EDE7F6;border-radius:8px;padding:10px 14px;font-size:11px;color:#3D2B6B;margin-top:10px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -85,75 +103,110 @@ h1{font-size:24px;font-weight:700;color:#3D2B6B;margin-bottom:4px}
   <span class="hdr-badge">CoA Extractor</span>
 </div>
 
-<div class="wrap">
-  <h1>Certificate of Analysis</h1>
-  <p class="sub">Nahrajte externý CoA &#8594; AI extrahuje a overí dáta &#8594; stiahnite XLSX / ODS / PDF</p>
+<div class="layout">
 
-  <!-- STEP 1: Upload -->
-  <div class="card">
-    <div class="sec"><span class="num">1</span>Nahranie dokumentu</div>
-    <div class="upz" id="dropZone"
-      onclick="document.getElementById('fi').click()"
-      ondragover="ev.preventDefault();this.classList.add('drag')"
-      ondragleave="this.classList.remove('drag')"
-      ondrop="handleDrop(event)">
-      <span class="upz-icon">&#128196;</span>
-      <div class="upz-title">Pretiahnite súbor alebo kliknite pre výber</div>
-      <div class="upz-sub">PDF, JPG, PNG — externý certifikát od dodávateľa</div>
-    </div>
-    <input type="file" id="fi" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleFile(this.files[0])">
-    <div id="fileChip" style="display:none" class="chip">&#128206; <span id="fileName"></span></div>
-    <button class="btn" id="extractBtn" onclick="extract()" disabled>&#128269; Extrahovať a overiť</button>
-  </div>
+  <!-- MAIN -->
+  <div class="main">
+    <h1>Certificate of Analysis</h1>
+    <p class="sub">Nahrajte externý CoA &#8594; AI extrahuje a overí dáta &#8594; stiahnite výstup</p>
 
-  <!-- STATUS -->
-  <div id="statusBar" style="display:none" class="status"></div>
-
-  <!-- STEP 2: Verifikácia + Chat + Download (zobrazí sa po extrakcii) -->
-  <div id="resultSection" style="display:none">
-
-    <!-- Verifikácia -->
-    <div class="card" id="verCard">
-      <div class="sec"><span class="num">2</span>Výsledok verifikácie</div>
-      <div id="verContent"></div>
-    </div>
-
-    <!-- Chat na dolaďovanie -->
+    <!-- Upload -->
     <div class="card">
-      <div class="sec"><span class="num">3</span>Doladiť s AI</div>
-      <div class="chat-box" id="chatBox">
-        <div class="msg msg-ai">
-          <div class="bubble">Extrakcia je hotová. Ak niečo nesedí, napíšte mi čo zmeniť — napr. "Zmeň batch number na 08592-org" alebo "Pridaj parameter Vitamin C 50 mg/g".</div>
+      <div class="sec"><span class="num">1</span>Nahranie dokumentu</div>
+      <div class="upz" id="dropZone"
+        onclick="document.getElementById('fi').click()"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="handleDrop(event)">
+        <span class="upz-icon">&#128196;</span>
+        <div class="upz-title">Pretiahnite súbor alebo kliknite</div>
+        <div class="upz-sub">PDF, JPG, PNG — externý certifikát</div>
+      </div>
+      <input type="file" id="fi" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleFile(this.files[0])">
+      <div id="fileChip" style="display:none" class="chip">&#128206; <span id="fileName"></span></div>
+      <button class="btn" id="extractBtn" onclick="extract()" disabled>&#128269; Extrahovať a overiť</button>
+    </div>
+
+    <!-- Status -->
+    <div id="statusBar" style="display:none" class="status"></div>
+
+    <!-- Result -->
+    <div id="resultSection" style="display:none">
+
+      <!-- Chat -->
+      <div class="card">
+        <div class="sec"><span class="num">2</span>Doladiť s AI</div>
+        <div class="chat-box" id="chatBox">
+          <div class="msg msg-ai">
+            <div class="bubble">Extrakcia hotová. Napíšte čo chcete zmeniť — napr. "Zmeň batch number na X" alebo "Pridaj parameter Y".</div>
+          </div>
+        </div>
+        <div class="chat-row">
+          <input type="text" class="chat-input" id="chatInput"
+            placeholder="Napr: Zmeň retest date na Dec 2028..."
+            onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="chat-send" id="chatSend" onclick="sendChat()">&#10148;</button>
         </div>
       </div>
-      <div class="chat-input-row">
-        <input type="text" class="chat-input" id="chatInput" placeholder="Napr: Zmeň retest date na Dec 2028..." onkeydown="if(event.key==='Enter')sendChat()">
-        <button class="chat-send" id="chatSend" onclick="sendChat()">Odoslať</button>
+
+      <!-- Download -->
+      <div class="card">
+        <div class="sec"><span class="num">3</span>Stiahnuť výstup</div>
+        <div class="btn-row">
+          <button class="dl-btn" onclick="download('xlsx')">&#8595; XLSX</button>
+          <button class="dl-btn" onclick="download('ods')">&#8595; ODS</button>
+          <button class="dl-btn" onclick="download('pdf')">&#8595; PDF</button>
+          <button class="ver-btn" onclick="showVerReport()">&#128203; Ver. report</button>
+        </div>
+        <div class="info-box">
+          XLSX / ODS &#8594; otvorte v LibreOffice pre úpravy &nbsp;|&nbsp; PDF &#8594; tlač a archivácia
+        </div>
       </div>
+
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- Verifikácia -->
+    <div class="sb-title">&#9989; Verifikácia</div>
+    <div id="verBox">
+      <div class="ver-empty">Zatiaľ žiadna extrakcia</div>
     </div>
 
-    <!-- Download -->
-    <div class="card">
-      <div class="sec"><span class="num">4</span>Stiahnuť výstup</div>
-      <div class="btn-row">
-        <button class="dl-btn" onclick="download('xlsx')">&#8595; XLSX</button>
-        <button class="dl-btn" onclick="download('ods')">&#8595; ODS</button>
-        <button class="dl-btn" onclick="download('pdf')">&#8595; PDF</button>
-      </div>
-      <div class="info-box">
-        <strong>Tip:</strong>
-        XLSX / ODS otvorte v LibreOffice alebo Excel pre prípadné úpravy.<br>
-        PDF je určený na tlač a archiváciu — podpíše ho QA Manager.
-      </div>
+    <!-- História -->
+    <div class="sb-title" style="margin-top:20px">
+      &#128193; História
+      <span class="hist-clear" onclick="clearHistory()">Vymazať</span>
+    </div>
+    <div id="histBox">
+      <div class="hist-empty">Žiadne záznamy</div>
     </div>
 
-  </div><!-- end resultSection -->
+  </div>
+
+</div><!-- end layout -->
+
+<!-- VER REPORT POPUP -->
+<div id="verPopup" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:28px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.2)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:#3D2B6B">&#128203; Verifikačný report</div>
+      <button onclick="closeVerReport()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#7A6A92">&#10005;</button>
+    </div>
+    <div id="verReportContent"></div>
+    <div style="margin-top:16px;text-align:right">
+      <button onclick="closeVerReport()" style="background:linear-gradient(135deg,#3D2B6B,#6B4FA0);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer">Zavrieť</button>
+    </div>
+  </div>
 </div>
 
 <script>
 var currentFile = null;
 var currentData = null;
 var chatHistory = [];
+const HIST_KEY = "orin_coa_history";
 
 function handleDrop(e) {
   e.preventDefault();
@@ -165,7 +218,7 @@ function handleFile(f) {
   if (!f) return;
   var ok = ["application/pdf","image/jpeg","image/png","image/jpg"].includes(f.type)
            || f.name.toLowerCase().endsWith(".pdf");
-  if (!ok) { showStatus("error","Podporované formáty: PDF, JPG, PNG"); return; }
+  if (!ok) { showStatus("err","Podporované formáty: PDF, JPG, PNG"); return; }
   currentFile = f;
   document.getElementById("fileName").textContent = f.name + " (" + Math.round(f.size/1024) + " KB)";
   document.getElementById("fileChip").style.display = "inline-flex";
@@ -199,7 +252,7 @@ async function extract() {
   document.getElementById("extractBtn").disabled = true;
   document.getElementById("resultSection").style.display = "none";
   chatHistory = [];
-  showStatus("proc", "Claude číta certifikát, extrahuje a overuje dáta&#8230;");
+  showStatus("proc", "Claude číta certifikát a overuje dáta&#8230;");
 
   try {
     var b64 = await toBase64(currentFile);
@@ -219,15 +272,19 @@ async function extract() {
 
     currentData = json.data;
     chatHistory = [];
-    renderVerification(currentData);
-    document.getElementById("chatBox").innerHTML = '<div class="msg msg-ai"><div class="bubble">Extrakcia je hotová. Ak niečo nesedí, napíšte mi čo zmeniť.</div></div>';
+
+    renderVerSidebar(currentData);
+    saveToHistory(currentData);
+    renderHistory();
+
+    document.getElementById("chatBox").innerHTML = '<div class="msg msg-ai"><div class="bubble">Extrakcia hotová. Napíšte čo chcete zmeniť.</div></div>';
     document.getElementById("resultSection").style.display = "block";
 
     var ver = currentData.verification || {};
     if (ver.has_errors) {
-      showStatus("warn", "&#9888; Extrakcia dokončená, ale niektoré hodnoty vyžadujú kontrolu — pozrite sekciu Verifikácia.");
+      showStatus("warn", "&#9888; Extrakcia dokončená — niektoré hodnoty vyžadujú kontrolu.");
     } else {
-      showStatus("done", "&#10003; Extrakcia a verifikácia úspešná — môžete stiahnuť výstup.");
+      showStatus("done", "&#10003; Extrakcia a verifikácia úspešná.");
     }
   } catch(e) {
     showStatus("err", "&#9888; " + e.message);
@@ -235,45 +292,184 @@ async function extract() {
   document.getElementById("extractBtn").disabled = false;
 }
 
-function renderVerification(data) {
+function renderVerSidebar(data) {
   var ver = data.verification || {};
   var issues = ver.issues || [];
-  var html = "";
+  var params = data.parameters || [];
 
-  if (issues.length === 0) {
-    html = '<div class="ver-all-ok">&#10003; Všetky povinné polia sú vyplnené a hodnoty sú v rozsahu.</div>';
-  } else {
-    html = '<div class="ver-box"><div class="ver-title">Nájdené upozornenia</div>';
-    for (var i=0; i<issues.length; i++) {
-      var it = issues[i];
-      html += '<div class="ver-item"><span class="ver-icon ver-err">&#9888;</span><span>' + (it.param || it.field || "") + " — " + (it.note || "") + '</span></div>';
+  var pass  = params.filter(function(p){ return p.status === "pass"; }).length;
+  var fail  = params.filter(function(p){ return p.status === "fail"; }).length;
+  var info  = params.filter(function(p){ return p.status === "info"; }).length;
+  var check = issues.filter(function(i){ return i.param; }).length;
+
+  var html = '<div class="ver-summary">';
+  html += '<div class="ver-row"><span class="ver-label">Celkom parametrov</span><span>' + params.length + '</span></div>';
+  html += '<div class="ver-row"><span class="ver-label">&#10003; Pass</span><span class="ver-pass">' + pass + '</span></div>';
+  if (fail > 0) html += '<div class="ver-row"><span class="ver-label">&#10007; Fail</span><span class="ver-fail">' + fail + '</span></div>';
+  if (check > 0) html += '<div class="ver-row"><span class="ver-label">&#9888; Check</span><span class="ver-check">' + check + '</span></div>';
+  html += '</div>';
+
+  if (issues.length > 0) {
+    html += '<div class="ver-issues">';
+    for (var i=0; i<Math.min(issues.length,5); i++) {
+      html += '<div class="ver-issue">&#9888; ' + (issues[i].param || issues[i].field || "") + '</div>';
     }
-    html += "</div>";
+    if (issues.length > 5) html += '<div style="font-size:10px;color:#7A6A92;margin-top:4px">+ ' + (issues.length-5) + ' ďalších...</div>';
+    html += '</div>';
+  } else {
+    html += '<div style="font-size:12px;color:#2E7D32;margin-top:8px;text-align:center">&#10003; Všetky hodnoty v poriadku</div>';
   }
 
-  // Súhrn extrakcie
-  html += '<div style="font-size:12px;color:#7A6A92;margin-top:10px;line-height:1.8">';
-  html += '<strong style="color:#3D2B6B;font-size:11px;letter-spacing:1px;text-transform:uppercase">Extrahované dáta</strong><br>';
-  html += "<b>Produkt:</b> " + (data.commonName||"—") + "<br>";
-  html += "<b>Šarža:</b> " + (data.batchNumber||"—") + " &nbsp;|&nbsp; ";
-  html += "<b>Výroba:</b> " + (data.manufacturingDate||"—") + " &nbsp;|&nbsp; ";
-  html += "<b>Retest:</b> " + (data.retestDate||"—") + "<br>";
-  html += "<b>Dodávateľ:</b> " + (data.supplier||"—") + "<br>";
-  html += "<b>Parametrov:</b> " + (data.parameters||[]).length;
-  html += "</div>";
-
-  document.getElementById("verContent").innerHTML = html;
+  document.getElementById("verBox").innerHTML = html;
 }
 
+function showVerReport() {
+  if (!currentData) return;
+  var ver = currentData.verification || {};
+  var issues = ver.issues || [];
+  var params = currentData.parameters || [];
+  var excluded = currentData.excluded || [];
+
+  var pass = params.filter(function(p){ return p.status==="pass"; }).length;
+  var fail = params.filter(function(p){ return p.status==="fail"; }).length;
+  var info = params.filter(function(p){ return p.status==="info"; }).length;
+
+  var html = '<div style="background:#F8F5FD;border-radius:8px;padding:14px;margin-bottom:16px">';
+  html += '<div style="font-size:12px;color:#7A6A92;margin-bottom:6px"><b style="color:#3D2B6B">Produkt:</b> ' + (currentData.commonName||"--") + '</div>';
+  html += '<div style="font-size:12px;color:#7A6A92"><b style="color:#3D2B6B">Sarza:</b> ' + (currentData.batchNumber||"--") + ' &nbsp;|&nbsp; <b style="color:#3D2B6B">Vyroba:</b> ' + (currentData.manufacturingDate||"--") + ' &nbsp;|&nbsp; <b style="color:#3D2B6B">Retest:</b> ' + (currentData.retestDate||"--") + '</div>';
+  html += '</div>';
+
+  // Statistiky
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">';
+  html += '<div style="background:#E8F5E9;border-radius:8px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:700;color:#2E7D32">' + pass + '</div><div style="font-size:11px;color:#7A6A92">PASS</div></div>';
+  html += '<div style="background:' + (fail>0?"#FCE4EC":"#F5F5F5") + ';border-radius:8px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:700;color:' + (fail>0?"#C62828":"#BDBDBD") + '">' + fail + '</div><div style="font-size:11px;color:#7A6A92">FAIL</div></div>';
+  html += '<div style="background:#F5F5F5;border-radius:8px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:700;color:#7A6A92">' + info + '</div><div style="font-size:11px;color:#7A6A92">INFO</div></div>';
+  html += '</div>';
+
+  // Verifikacne problemy
+  if (issues.length > 0) {
+    html += '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#C62828;margin-bottom:8px">Verifikacne problemy</div>';
+    for (var i=0; i<issues.length; i++) {
+      html += '<div style="background:#FFF5F5;border:1px solid #FFCDD2;border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:12px">';
+      html += '<span style="color:#C62828;font-weight:600">&#9888;</span> ' + (issues[i].param || issues[i].field || "") + ' - ' + (issues[i].note || "") + '</div>';
+    }
+  } else {
+    html += '<div style="background:#E8F5E9;border-radius:8px;padding:12px;text-align:center;font-size:13px;color:#2E7D32;font-weight:600">&#10003; Vsetky parametre su v poriadku</div>';
+  }
+
+  // Dva zoznamy
+  var reasonLabels = {"supplier_info":"Dodavatel","lab_info":"Lab. info","lab_appendix":"Lab. appendix (detail. profil)","lab_personnel":"Lab. personal","lab_order_info":"Lab. objednavka"};
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">';
+
+  // Preslo
+  html += '<div>';
+  html += '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#2E7D32;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E8F5E9">&#10003; Preslo do vystupu (' + params.length + ')</div>';
+  for (var i=0; i<params.length; i++) {
+    var p = params[i];
+    var icon = p.status==="pass"?"&#10003;":p.status==="fail"?"&#10007;":"&#183;";
+    var col  = p.status==="pass"?"#2E7D32":p.status==="fail"?"#C62828":"#7A6A92";
+    html += '<div style="font-size:11px;padding:3px 0;border-bottom:1px solid #F0ECF8;display:flex;align-items:center;gap:5px">';
+    html += '<span style="color:' + col + ';flex-shrink:0">' + icon + '</span>';
+    html += '<span style="color:#1A0A33">' + (p.name||"") + '</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Vylucene
+  html += '<div>';
+  html += '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#C62828;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #FCE4EC">&#10007; Vylucene (' + excluded.length + ')</div>';
+  if (excluded.length === 0) {
+    html += '<div style="font-size:11px;color:#7A6A92;font-style:italic;padding:8px 0">Ziadne vylucene polia</div>';
+  }
+  for (var i=0; i<excluded.length; i++) {
+    var ex = excluded[i];
+    var rl = reasonLabels[ex.reason] || ex.reason || "";
+    html += '<div style="font-size:11px;padding:3px 0;border-bottom:1px solid #FFF0F0">';
+    html += '<div style="display:flex;justify-content:space-between">';
+    html += '<span style="color:#C62828">' + (ex.field||ex.name||"") + '</span>';
+    html += '<span style="color:#7A6A92;font-size:10px">' + rl + '</span>';
+    html += '</div>';
+    if (ex.value) html += '<div style="color:#7A6A92;font-size:10px">' + ex.value + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '</div>';
+
+  document.getElementById("verReportContent").innerHTML = html;
+  document.getElementById("verPopup").style.display = "flex";
+}
+
+function closeVerReport() {
+  document.getElementById("verPopup").style.display = "none";
+}
+
+// História
+function saveToHistory(data) {
+  var hist = getHistory();
+  var entry = {
+    id: Date.now(),
+    commonName: data.commonName || "—",
+    batchNumber: data.batchNumber || "—",
+    date: new Date().toLocaleString("sk-SK"),
+    paramCount: (data.parameters||[]).length,
+    hasIssues: (data.verification||{}).has_errors || false,
+    data: data
+  };
+  hist.unshift(entry);
+  if (hist.length > 30) hist = hist.slice(0,30);
+  localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+}
+
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); }
+  catch(e) { return []; }
+}
+
+function clearHistory() {
+  if (!confirm("Vymazať celú históriu?")) return;
+  localStorage.removeItem(HIST_KEY);
+  renderHistory();
+}
+
+function renderHistory() {
+  var hist = getHistory();
+  var box = document.getElementById("histBox");
+  if (hist.length === 0) {
+    box.innerHTML = '<div class="hist-empty">Žiadne záznamy</div>';
+    return;
+  }
+  var html = "";
+  for (var i=0; i<hist.length; i++) {
+    var h = hist[i];
+    html += '<div class="hist-item" onclick="loadFromHistory(' + i + ')">';
+    html += '<div class="hist-name">' + (h.commonName||"—") + '</div>';
+    html += '<div class="hist-batch">' + (h.batchNumber||"—") + ' &nbsp;·&nbsp; ' + h.paramCount + ' param.</div>';
+    html += '<div class="hist-date">' + h.date + (h.hasIssues?' &nbsp;<span style="color:#E65100">⚠</span>':"") + '</div>';
+    html += '</div>';
+  }
+  box.innerHTML = html;
+}
+
+function loadFromHistory(idx) {
+  var hist = getHistory();
+  if (!hist[idx]) return;
+  currentData = hist[idx].data;
+  chatHistory = [];
+  renderVerSidebar(currentData);
+  document.getElementById("chatBox").innerHTML = '<div class="msg msg-ai"><div class="bubble">Načítané z histórie: ' + (currentData.commonName||"") + '</div></div>';
+  document.getElementById("resultSection").style.display = "block";
+  showStatus("done", "&#10003; Načítané z histórie — môžete stiahnuť výstup.");
+}
+
+// Chat
 async function sendChat() {
   var input = document.getElementById("chatInput");
   var msg = input.value.trim();
   if (!msg || !currentData) return;
-
   input.value = "";
   document.getElementById("chatSend").disabled = true;
-  addChatMsg("user", msg);
-  addChatMsg("ai", "&#8230;", "typing");
+  addMsg("user", msg);
+  addMsg("ai", "&#8230;", "typing");
   chatHistory.push({role:"user", content: msg});
 
   try {
@@ -281,29 +477,28 @@ async function sendChat() {
       method: "POST",
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
-        file_b64: "",
-        file_type: "",
-        filename: "",
+        file_b64: "", file_type: "", filename: "",
         chat_history: chatHistory,
         current_data: currentData
       })
     });
     var json = await resp.json();
     if (!resp.ok || json.error) throw new Error(json.error || "API error");
-
     currentData = json.data;
-    removeLast();
-    chatHistory.push({role:"assistant", content:"Hotovo, dáta som aktualizoval."});
-    addChatMsg("ai", "Hotovo! Dáta som aktualizoval. Môžete stiahnuť nový výstup.");
-    renderVerification(currentData);
+    removeTyping();
+    chatHistory.push({role:"assistant", content:"Hotovo."});
+    addMsg("ai", "Hotovo! Dáta aktualizované.");
+    renderVerSidebar(currentData);
+    saveToHistory(currentData);
+    renderHistory();
   } catch(e) {
-    removeLast();
-    addChatMsg("ai", "&#9888; Chyba: " + e.message);
+    removeTyping();
+    addMsg("ai", "&#9888; Chyba: " + e.message);
   }
   document.getElementById("chatSend").disabled = false;
 }
 
-function addChatMsg(role, text, id) {
+function addMsg(role, text, id) {
   var box = document.getElementById("chatBox");
   var div = document.createElement("div");
   div.className = "msg msg-" + role;
@@ -313,13 +508,12 @@ function addChatMsg(role, text, id) {
   box.scrollTop = box.scrollHeight;
 }
 
-function removeLast() {
-  var box = document.getElementById("chatBox");
-  var typing = document.getElementById("typing");
-  if (typing) typing.remove();
-  else if (box.lastChild) box.removeChild(box.lastChild);
+function removeTyping() {
+  var t = document.getElementById("typing");
+  if (t) t.remove();
 }
 
+// Download
 async function download(fmt) {
   if (!currentData) return;
   showStatus("proc", "Generujem " + fmt.toUpperCase() + "&#8230;");
@@ -329,21 +523,21 @@ async function download(fmt) {
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({format: fmt, data: currentData})
     });
-    if (!resp.ok) {
-      var err = await resp.json();
-      throw new Error(err.error || "Chyba generovania");
-    }
+    if (!resp.ok) { var err = await resp.json(); throw new Error(err.error||"Chyba"); }
     var blob = await resp.blob();
-    var url  = URL.createObjectURL(blob);
-    var a    = document.createElement("a");
-    a.href   = url;
-    a.download = "ORIN_CoA_" + (currentData.batchNumber||"export") + "." + fmt;
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    var fname = currentData.fileName || ("ORIN_CoA_" + (currentData.batchNumber||"export"));
+    a.download = fname + "." + fmt;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     hideStatus();
   } catch(e) {
     showStatus("err", "&#9888; " + e.message);
   }
 }
+
+// Init
+renderHistory();
 </script>
 </body>
 </html>
