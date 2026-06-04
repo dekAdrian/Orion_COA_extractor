@@ -89,13 +89,11 @@ def _meta_pairs(data):
         ("Common Name",       data.get("commonName","")),
         ("Batch Number",      data.get("batchNumber","")),
         ("Species",           data.get("species","")),
-        ("Supplier",          data.get("supplier","")),
-        ("Country of Origin", data.get("countryOfOrigin","")),
+        ("Product Code",      data.get("productCode","")),
     ]
     std_r = [
         ("Manufacture Date",  data.get("manufacturingDate","")),
         ("Retest / Expiry",   data.get("retestDate","")),
-        ("Product Code",      data.get("productCode","")),
         ("Shelf Life",        data.get("shelfLife","")),
         ("Allergens",         data.get("allergens","")),
     ]
@@ -113,9 +111,48 @@ def _meta_pairs(data):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _parse_num(s):
-    if not s: return None
-    m = re.search(r"[<>]?\s*([\d]+\.?[\d]*)", str(s).replace(",","."))
-    return float(m.group(1)) if m else None
+    """Extrahuje číslo a operátor z reťazca. Vracia (operator, number) alebo (None, None)"""
+    if not s: return None, None
+    s = str(s).replace(",", ".").strip()
+    m = re.match(r"([<>≤≥]=?)\s*([0-9]+\.?[0-9]*)", s)
+    if m:
+        return m.group(1), float(m.group(2))
+    m = re.search(r"([0-9]+\.?[0-9]*)", s)
+    if m:
+        return "=", float(m.group(1))
+    return None, None
+
+def _check_result_vs_limit(res_op, res_val, limit_op, limit_val):
+    """
+    Skontroluje či result spĺňa limit.
+    Vracia True ak OK, False ak problém.
+    
+    Príklady:
+    result <0.05, max 0.1  -> OK (0.05 < 0.1)
+    result 57.8, min/max 55/70 -> OK
+    result >5000, min 5000 -> OK (viac ako minimum)
+    result 0.15, max 0.1 -> FAIL
+    """
+    if res_val is None or limit_val is None:
+        return True  # Nevieme porovnat, preskocime
+
+    # Ak result ma operator < alebo <=, realna hodnota je mensie
+    # Takze pre max limit: ak <X a max je Y, a X <= Y -> urcite OK
+    if res_op in ["<", "<="]:
+        if limit_op in ["<", "<="]:
+            return res_val <= limit_val  # <0.05 vs max <0.1
+        else:
+            return res_val <= limit_val  # <0.05 vs max 0.1 -> OK
+    
+    # Ak result ma operator > alebo >=
+    if res_op in [">", ">="]:
+        if limit_op in [">", ">="]:
+            return res_val >= limit_val  # >5000 vs min >5000 -> OK
+        else:
+            return res_val >= limit_val
+    
+    # Standardny pripad - ciselna hodnota
+    return res_val <= limit_val if limit_op in ["<", "<=", "="] else res_val >= limit_val
 
 def verify_parameters(parameters):
     result = []
@@ -129,43 +166,66 @@ def verify_parameters(parameters):
         note = ""
         ver  = "ok"
 
-        if status == "info" or res_str.lower() in ["compliant","not tested","n/t","n.t.",""]:
+        # Preskocime info/not tested
+        if status == "info" or res_str.lower() in ["compliant","not tested","n/t","n.t.","pass",""]:
             p["verification_status"] = "info"
             p["verification_note"]   = ""
             result.append(p)
             continue
 
+        # Not detected / ND -> vzdy OK pre max limity
         if re.search(r"not\s+detected|^nd$|^negative$", res_str.lower()):
             p["verification_status"] = "ok"
             p["verification_note"]   = ""
             result.append(p)
             continue
 
-        res_num = _parse_num(res_str)
+        # Parsujeme result
+        res_op, res_val = _parse_num(res_str)
+
+        # Parsujeme min/max
+        min_op = max_op = None
         min_val = max_val = None
 
         if "/" in min_max:
             parts = min_max.split("/")
             left  = parts[0].strip()
             right = parts[1].strip() if len(parts) > 1 else ""
-            if left not in ["-", ""]:
-                min_val = _parse_num(left)
+            if left not in ["-", "", "nd", "ND"]:
+                min_op, min_val = _parse_num(left)
             if right.lower() not in ["nd","not detected","-",""]:
-                max_val = _parse_num(right)
-        elif re.match(r"[>≥]=?", min_max):
-            min_val = _parse_num(min_max)
-        elif re.match(r"[<≤]=?", min_max):
-            max_val = _parse_num(min_max)
+                max_op, max_val = _parse_num(right)
+        elif re.search(r"[>≥]", min_max):
+            min_op, min_val = _parse_num(min_max)
+        elif re.search(r"[<≤]", min_max):
+            max_op, max_val = _parse_num(min_max)
 
-        if res_num is not None:
-            if min_val is not None and res_num < min_val:
-                ver  = "error"
-                note = f"Hodnota {res_num} je pod minimom {min_val}"
-                issues.append({"param": name, "note": note})
-                p["status"] = "fail"
-            elif max_val is not None and res_num > max_val:
-                ver  = "error"
-                note = f"Hodnota {res_num} presahuje maximum {max_val}"
+        if res_val is not None:
+            fail = False
+            # Kontrola minima
+            if min_val is not None:
+                # Result musi byt >= minimum
+                # Ak result je <X a minimum je Y, a X <= Y -> mozny problem
+                if res_op in ["<", "<="] and res_val <= min_val:
+                    fail = True
+                    note = f"Hodnota {res_op}{res_val} moze byt pod minimom {min_val}"
+                elif res_op not in ["<", "<="] and res_val < min_val:
+                    fail = True
+                    note = f"Hodnota {res_val} je pod minimom {min_val}"
+
+            # Kontrola maxima
+            if not fail and max_val is not None:
+                # Ak result nema operator < a je vacsi ako max -> fail
+                if res_op not in ["<", "<="] and res_val > max_val:
+                    fail = True
+                    note = f"Hodnota {res_val} presahuje maximum {max_val}"
+                # Ak result ma < a je vacsi ako max -> aj tak fail
+                elif res_op in ["<", "<="] and res_val > max_val:
+                    fail = True
+                    note = f"Hodnota {res_op}{res_val} presahuje maximum {max_val}"
+
+            if fail:
+                ver = "error"
                 issues.append({"param": name, "note": note})
                 p["status"] = "fail"
             else:
@@ -175,7 +235,7 @@ def verify_parameters(parameters):
 
         if not res_str.strip():
             ver  = "warning"
-            note = "Chýba hodnota výsledku"
+            note = "Chyba hodnota vysledku"
             issues.append({"param": name, "note": note})
 
         p["verification_status"] = ver
