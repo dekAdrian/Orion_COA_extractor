@@ -90,13 +90,17 @@ RULES:
 - status: pass=within spec, fail=outside spec, info=not tested/not applicable/compliant
 - min_max: "55.0 / 70.0 %" or "- / 1 mg KOH/g" or "ND" — include unit
 - result: value + unit together unless separate unit column exists
+- NUMBERS: always use dot as decimal separator. Convert: 1,0->1.0, 0,05->0.05
+- THOUSANDS: 3 digits after comma = thousands: 10,000->10000, 5,426->5426
 - supplier: extract but it will NOT appear in output files (internal use only)
 - notes: only product notes and footnote explanations (e.g. "1 tested annually")
 - Preserve footnote markers 1 2 in parameter names
 - excluded: list of fields/values found in document but NOT included in output
-  reason values: "supplier_info", "lab_info", "fatty_acid_profile", "lab_personnel", "lab_order_info"
+  reason values: "supplier_info", "lab_info", "lab_appendix", "lab_personnel", "lab_order_info"
+  IMPORTANT: Do NOT list individual fatty acid rows - group them into ONE entry:
+  {"field": "Fatty acid profile (detail)", "value": "X individual fatty acids", "reason": "lab_appendix"}
   Example: {"field": "Approved by", "value": "John Smith", "reason": "lab_personnel"}
-  Example: {"field": "C4:0 Butyric acid (lab appendix row)", "value": "0.1%", "reason": "lab_appendix"}
+  Example: {"field": "Fatty acid profile (detail)", "value": "23 individual fatty acids", "reason": "lab_appendix"}
   Example: {"field": "Sample acceptance", "value": "05.09.2025", "reason": "lab_info"}
 
 filename: {filename}"""
