@@ -6,22 +6,41 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 PROMPT = """You are a QC assistant for ORIN Group s.r.o., a Slovak dietary supplement manufacturer.
 
-Extract ALL data from this Certificate of Analysis. Return ONLY valid JSON, no markdown.
+Extract data from this Certificate of Analysis. Return ONLY valid JSON, no markdown.
 
-LEARNED FROM ORIN INTERNAL TEMPLATES:
-- Standard style: Parameter | Min/Max | Result
-- Algae Oil style: Parameter | Unit | Min/Max | Result (separate unit column, footnotes 1 2)
-- Capsule style: Analytical data | Test method | Specification | Result
-- Meta fields vary per product type
-- Fatty acid profiles (long individual lists) are EXCLUDED
-- Summary specs like DHA%, EPA% are INCLUDED
-- Footnotes like "1 tested annually" go into notes field
+LEARNED FROM ORIN INTERNAL TEMPLATES (3 examples studied):
+1. Coconut MCT Oil: Parameter | Min/Max | Result (no unit, no method, no sections)
+2. Algae Oil: Parameter | Unit | Min/Max | Result (unit column, footnotes 1 2, sections)
+3. HPMC Capsules: Analytical data | Test method | Specification | Result (method column)
+
+ALWAYS EXCLUDE from output:
+- Supplier name, manufacturer name, laboratory name
+- Country of origin
+- writtenBy, approvedBy, signedBy, analyzedBy
+- sampleAcceptance, testingPeriod, dateOfSampling
+- Laboratory order numbers, sample numbers, report numbers
+- Detailed fatty acid APPENDIX tables (long lists of individual acids C4:0, C6:0... from lab report appendix pages) - these are lab detail, NOT primary specs
+- Laboratory accreditation info, RvA accreditation numbers
+
+ALWAYS INCLUDE fatty acids that ARE primary specifications:
+- C8:0 Caprylic, C10:0 Capric (if listed as primary spec with min/max)
+- DHA %, EPA %, Total omega-3 (if listed as primary spec)
+- Summary fatty acid values with specification limits
+
+ALWAYS INCLUDE in extraMeta (product-specific fields):
+- Body Colour, CAP Colour, Opacity, Body Printing, CAP Printing (capsules)
+- Antioxidants, Colorant (oils)
+- Composition, Description
+
+FILENAME GENERATION:
+- Generate a clean filename: "Internal_[ProductName]_[BatchNumber]"
+- Replace spaces with underscores, remove special chars
+- Example: "Internal_Coconut_MCT_Oil_08580org"
 
 Return this JSON:
 {
   "commonName": "",
-  "supplier": "",
-  "countryOfOrigin": "",
+  "fileName": "",
   "batchNumber": "",
   "productCode": "",
   "manufacturingDate": "",
@@ -35,6 +54,14 @@ Return this JSON:
   "description": "",
   "extraMeta": {},
   "notes": "",
+  "supplier": "",
+  "excluded": [
+    {
+      "field": "",
+      "value": "",
+      "reason": ""
+    }
+  ],
   "layout": {
     "max_param_chars": 30,
     "max_minmax_chars": 20,
@@ -60,13 +87,17 @@ Return this JSON:
 }
 
 RULES:
-- status: pass=within spec, fail=outside spec, info=not tested/not applicable
-- min_max: combine as "55.0 / 70.0 %" or "- / 1 mg KOH/g" or "ND"
-- result: value + unit together unless separate unit column
-- extraMeta: extra product-specific meta fields
-- has_unit_column: true if separate unit column exists
-- has_method_column: true if test method column exists
-- Preserve footnote markers in parameter names
+- status: pass=within spec, fail=outside spec, info=not tested/not applicable/compliant
+- min_max: "55.0 / 70.0 %" or "- / 1 mg KOH/g" or "ND" — include unit
+- result: value + unit together unless separate unit column exists
+- supplier: extract but it will NOT appear in output files (internal use only)
+- notes: only product notes and footnote explanations (e.g. "1 tested annually")
+- Preserve footnote markers 1 2 in parameter names
+- excluded: list of fields/values found in document but NOT included in output
+  reason values: "supplier_info", "lab_info", "fatty_acid_profile", "lab_personnel", "lab_order_info"
+  Example: {"field": "Approved by", "value": "John Smith", "reason": "lab_personnel"}
+  Example: {"field": "C4:0 Butyric acid (lab appendix row)", "value": "0.1%", "reason": "lab_appendix"}
+  Example: {"field": "Sample acceptance", "value": "05.09.2025", "reason": "lab_info"}
 
 filename: {filename}"""
 
