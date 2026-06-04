@@ -190,21 +190,31 @@ h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
     <button onclick="closeVerReport()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:6px;padding:5px 14px;cursor:pointer;font-size:13px;margin-left:12px">&#10005; Zavrieť</button>
   </div>
 
-  <!-- Dva panely pod toolbarom -->
-  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 480px">
+  <!-- Dva panely pod toolbarom - resizable -->
+  <div id="verPanels" style="position:absolute;top:48px;left:0;right:0;bottom:0;display:flex">
 
     <!-- LAVA: PDF -->
-    <div style="overflow-y:auto;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;padding:20px;gap:16px;border-right:2px solid #3D2B6B">
-      <canvas id="pdfCanvas" style="width:100%;max-width:800px;box-shadow:0 4px 24px rgba(0,0,0,0.6);border-radius:4px"></canvas>
+    <div id="verLeft" style="overflow-y:auto;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;padding:20px;gap:16px;width:58%;min-width:20%;max-width:80%">
+      <canvas id="pdfCanvas" style="width:100%;max-width:900px;box-shadow:0 4px 24px rgba(0,0,0,0.6);border-radius:4px"></canvas>
       <div id="pdfPlaceholder" style="display:none;color:#7A6A92;font-size:13px;text-align:center;padding:80px 20px">
         <div style="font-size:48px;margin-bottom:16px">&#128247;</div>
-        <div>Náhľad nie je dostupný pre tento formát súboru</div>
+        <div>Nahľad nie je dostupny pre tento format suboru</div>
+      </div>
+    </div>
+
+    <!-- DIVIDER - draggable -->
+    <div id="verDivider" style="width:6px;background:#3D2B6B;cursor:col-resize;flex-shrink:0;transition:background 0.2s;position:relative"
+      onmouseenter="this.style.background='#6B4FA0'"
+      onmouseleave="this.style.background=isDragging?'#6B4FA0':'#3D2B6B'">
+      <!-- Grip handle -->
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:3px">
+        <div style="width:2px;height:20px;background:rgba(255,255,255,0.3);border-radius:1px"></div>
       </div>
     </div>
 
     <!-- PRAVA: Report -->
-    <div style="overflow-y:auto;background:#fff;display:flex;flex-direction:column">
-      <div id="verReportContent" style="padding:20px;flex:1"></div>
+    <div id="verRight" style="overflow-y:auto;background:#fff;flex:1;min-width:20%">
+      <div id="verReportContent" style="padding:20px"></div>
     </div>
 
   </div>
@@ -473,20 +483,7 @@ function showVerReport() {
     html += "<div style='margin-bottom:14px'></div>";
   }
 
-  // ── PRESLO vs VYLUCENE ────────────────────────────────────────────────────
-  var reasonLabels = {
-    "supplier_info":"Dodavatel","lab_info":"Lab. info",
-    "lab_appendix":"Lab. appendix","lab_personnel":"Lab. personal",
-    "lab_order_info":"Lab. objednavka"
-  };
-
-  html += "<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px'>";
-
-  // PRESLO - metadata + parametre
-  html += "<div>";
-  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2E7D32;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E8F5E9'>Preslo</div>";
-
-  // Metadata sekcia
+  // ── POROVNAVACIA TABULKA METADAT ─────────────────────────────────────────
   var metaRows = [
     ["Common Name",       d.commonName],
     ["Batch Number",      d.batchNumber],
@@ -499,44 +496,69 @@ function showVerReport() {
     ["GMO",               d.gmo],
     ["Kosher",            d.kosher],
   ];
-  // Pridame extraMeta
   var extra = d.extraMeta || {};
-  for (var k in extra) {
-    if (extra[k]) metaRows.push([k, extra[k]]);
-  }
+  for (var k in extra) { if (extra[k]) metaRows.push([k, extra[k]]); }
 
-  html += "<div style='font-size:9px;font-weight:700;color:#3D2B6B;letter-spacing:1px;text-transform:uppercase;margin:6px 0 4px'>Metadata</div>";
+  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:8px'>Metadata — kontrola</div>";
+  html += "<table style='width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px'>";
+  html += "<tr style='background:#3D2B6B'>";
+  html += "<th style='padding:6px 8px;text-align:left;color:#fff;font-weight:600;width:35%'>Pole</th>";
+  html += "<th style='padding:6px 8px;text-align:left;color:#fff;font-weight:600;width:50%'>Hodnota z dokumentu</th>";
+  html += "<th style='padding:6px 8px;text-align:center;color:#fff;font-weight:600;width:15%'>OK?</th>";
+  html += "</tr>";
   for (var i=0; i<metaRows.length; i++) {
     var label = metaRows[i][0];
     var val   = metaRows[i][1];
-    var hasVal = val && val !== "—";
-    var icon  = hasVal ? "✓" : "—";
-    var col   = hasVal ? "#2E7D32" : "#BDBDBD";
-    html += "<div style='font-size:11px;padding:3px 0;border-bottom:1px solid #F0ECF8;display:flex;align-items:flex-start;gap:5px'>";
-    html += "<span style='color:" + col + ";flex-shrink:0;margin-top:1px'>" + icon + "</span>";
-    html += "<span style='color:" + (hasVal?"#1A0A33":"#BDBDBD") + ";line-height:1.3'>" + label + (hasVal ? "" : " <i style='font-size:10px'>(prazdne)</i>") + "</span>";
-    html += "</div>";
+    var hasVal = val && val.trim() !== "" && val !== "—";
+    var rowBg = i%2===0 ? "#F8F5FD" : "#FFFFFF";
+    html += "<tr style='background:" + rowBg + "'>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#7A6A92;font-weight:600'>" + label + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#1A0A33'>" + (hasVal ? val : "<span style='color:#BDBDBD'>—</span>") + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;text-align:center;font-weight:700;color:" + (hasVal?"#2E7D32":"#BDBDBD") + "'>" + (hasVal?"✓":"—") + "</td>";
+    html += "</tr>";
   }
+  html += "</table>";
 
-  // Parametre sekcia
-  html += "<div style='font-size:9px;font-weight:700;color:#3D2B6B;letter-spacing:1px;text-transform:uppercase;margin:10px 0 4px'>Parametre (" + params.length + ")</div>";
+  // ── POROVNAVACIA TABULKA PARAMETROV ──────────────────────────────────────
+  var reasonLabels = {
+    "supplier_info":"Dodavatel","lab_info":"Lab. info",
+    "lab_appendix":"Lab. appendix","lab_personnel":"Lab. personal",
+    "lab_order_info":"Lab. objednavka"
+  };
+
+  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:8px'>Parametre — audit (" + params.length + ")</div>";
+  html += "<table style='width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px'>";
+  html += "<tr style='background:#3D2B6B'>";
+  html += "<th style='padding:6px 8px;text-align:left;color:#fff;font-weight:600;width:35%'>Parameter</th>";
+  html += "<th style='padding:6px 8px;text-align:left;color:#fff;font-weight:600;width:25%'>Min / Max</th>";
+  html += "<th style='padding:6px 8px;text-align:left;color:#fff;font-weight:600;width:25%'>Výsledok</th>";
+  html += "<th style='padding:6px 8px;text-align:center;color:#fff;font-weight:600;width:15%'>OK?</th>";
+  html += "</tr>";
   for (var i=0; i<params.length; i++) {
     var p = params[i];
-    var icon = p.status==="pass"?"✓":p.status==="fail"?"✗":"·";
-    var col  = p.status==="pass"?"#2E7D32":p.status==="fail"?"#C62828":"#9E9E9E";
-    html += "<div style='font-size:11px;padding:3px 0;border-bottom:1px solid #F0ECF8;display:flex;align-items:flex-start;gap:5px'>";
-    html += "<span style='color:" + col + ";flex-shrink:0;margin-top:1px'>" + icon + "</span>";
-    html += "<span style='color:#1A0A33;line-height:1.3'>" + (p.name||"") + "</span>";
-    html += "</div>";
+    var st = p.status;
+    var icon = st==="pass"?"✓":st==="fail"?"✗":"·";
+    var col  = st==="pass"?"#2E7D32":st==="fail"?"#C62828":"#9E9E9E";
+    var rowBg = i%2===0 ? "#F8F5FD" : "#FFFFFF";
+    if (st==="fail") rowBg = "#FFF5F5";
+    html += "<tr style='background:" + rowBg + "'>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#1A0A33;font-weight:600'>" + (p.name||"") + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#7A6A92'>" + (p.min_max||"—") + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:" + col + ";font-weight:600'>" + (p.result||"—") + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;text-align:center;font-weight:700;font-size:13px;color:" + col + "'>" + icon + "</td>";
+    html += "</tr>";
+    // Ak je FAIL, pridame poznamku
+    if (st==="fail" && p.verification_note) {
+      html += "<tr style='background:#FFF5F5'>";
+      html += "<td colspan='4' style='padding:3px 8px 5px 24px;color:#C62828;font-size:10px;border-bottom:1px solid #FFCDD2'>&#9888; " + p.verification_note + "</td>";
+      html += "</tr>";
+    }
   }
-  html += "</div>";
+  html += "</table>";
 
-  // VYLUCENE
-  html += "<div>";
-  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C62828;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #FCE4EC'>Vylucene</div>";
-  if (excluded.length === 0) {
-    html += "<div style='font-size:11px;color:#7A6A92;font-style:italic;padding:6px 0'>Ziadne vylucene</div>";
-  } else {
+  // ── VYLUCENE ─────────────────────────────────────────────────────────────
+  if (excluded.length > 0) {
+    html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C62828;margin-bottom:8px'>Vylucene z dokumentu</div>";
     var groups = {};
     for (var i=0; i<excluded.length; i++) {
       var reason = excluded[i].reason || "other";
@@ -550,16 +572,14 @@ function showVerReport() {
       html += "<div style='font-size:10px;font-weight:700;color:#C62828;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px'>" + label + "</div>";
       for (var j=0; j<items.length; j++) {
         var ex = items[j];
-        html += "<div style='font-size:11px;color:#7A6A92;padding:1px 0;display:flex;justify-content:space-between;gap:8px'>";
+        html += "<div style='font-size:11px;color:#7A6A92;padding:2px 0;display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #FFEBEE'>";
         html += "<span>" + (ex.field||ex.name||"") + "</span>";
-        if (ex.value) html += "<span style='color:#B0A0C8;font-size:10px;text-align:right;max-width:45%'>" + ex.value + "</span>";
+        if (ex.value) html += "<span style='color:#B0A0C8;font-size:10px'>" + ex.value + "</span>";
         html += "</div>";
       }
       html += "</div>";
     }
   }
-  html += "</div>";
-  html += "</div>"; // end grid
 
   document.getElementById("verReportContent").innerHTML = html;
 }
@@ -657,6 +677,44 @@ async function download(fmt) {
 
 // Init
 
+
+// Resizable divider
+var isDragging = false;
+var startX = 0;
+var startLeftWidth = 0;
+
+document.addEventListener('mousedown', function(e) {
+  if (e.target.id === 'verDivider' || e.target.closest('#verDivider')) {
+    isDragging = true;
+    startX = e.clientX;
+    var left = document.getElementById('verLeft');
+    startLeftWidth = left ? left.offsetWidth : 0;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  }
+});
+
+document.addEventListener('mousemove', function(e) {
+  if (!isDragging) return;
+  var panels = document.getElementById('verPanels');
+  var left = document.getElementById('verLeft');
+  if (!panels || !left) return;
+  var newWidth = startLeftWidth + (e.clientX - startX);
+  var pct = (newWidth / panels.offsetWidth) * 100;
+  pct = Math.max(20, Math.min(80, pct));
+  left.style.width = pct + '%';
+});
+
+document.addEventListener('mouseup', function() {
+  if (isDragging) {
+    isDragging = false;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    var d = document.getElementById('verDivider');
+    if (d) d.style.background = '#3D2B6B';
+  }
+});
 </script>
 </body>
 </html>
