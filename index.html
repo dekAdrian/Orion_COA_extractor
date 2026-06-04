@@ -389,33 +389,13 @@ async function extract() {
 }
 
 function renderVerSidebar(data) {
-  var ver = data.verification || {};
-  var issues = ver.issues || [];
   var params = data.parameters || [];
-
-  var pass  = params.filter(function(p){ return p.status === "pass"; }).length;
-  var fail  = params.filter(function(p){ return p.status === "fail"; }).length;
-  var info  = params.filter(function(p){ return p.status === "info"; }).length;
-  var check = issues.filter(function(i){ return i.param; }).length;
-
+  var excluded = data.excluded || [];
   var html = '<div class="ver-summary">';
-  html += '<div class="ver-row"><span class="ver-label">Celkom parametrov</span><span>' + params.length + '</span></div>';
-  html += '<div class="ver-row"><span class="ver-label">&#10003; Pass</span><span class="ver-pass">' + pass + '</span></div>';
-  if (fail > 0) html += '<div class="ver-row"><span class="ver-label">&#10007; Fail</span><span class="ver-fail">' + fail + '</span></div>';
-  if (check > 0) html += '<div class="ver-row"><span class="ver-label">&#9888; Check</span><span class="ver-check">' + check + '</span></div>';
+  html += '<div class="ver-row"><span class="ver-label">Parametrov v XLSX</span><span style="font-weight:700;color:#3D2B6B">' + params.length + '</span></div>';
+  html += '<div class="ver-row"><span class="ver-label">Vylucených</span><span style="color:#C62828;font-weight:700">' + excluded.length + '</span></div>';
   html += '</div>';
-
-  if (issues.length > 0) {
-    html += '<div class="ver-issues">';
-    for (var i=0; i<Math.min(issues.length,5); i++) {
-      html += '<div class="ver-issue">&#9888; ' + (issues[i].param || issues[i].field || "") + '</div>';
-    }
-    if (issues.length > 5) html += '<div style="font-size:10px;color:#7A6A92;margin-top:4px">+ ' + (issues.length-5) + ' ďalších...</div>';
-    html += '</div>';
-  } else {
-    html += '<div style="font-size:12px;color:#2E7D32;margin-top:8px;text-align:center">&#10003; Všetky hodnoty v poriadku</div>';
-  }
-
+  html += '<div style="font-size:11px;color:#7A6A92;margin-top:10px;text-align:center">Otvorte Ver. report pre detailne porovnanie originálu a XLSX</div>';
   document.getElementById("verBox").innerHTML = html;
 }
 
@@ -424,140 +404,107 @@ function showVerReport() {
   loadPdfForViewer();
   document.getElementById("verPopup").style.display = "block";
 
-  var ver = currentData.verification || {};
-  var issues = ver.issues || [];
-  var params = currentData.parameters || [];
-  var excluded = currentData.excluded || [];
   var d = currentData;
-
-  var pass = params.filter(function(p){ return p.status==="pass"; }).length;
-  var fail = params.filter(function(p){ return p.status==="fail"; }).length;
-  var info = params.filter(function(p){ return p.status==="info"; }).length;
+  var params = d.parameters || [];
+  var excluded = d.excluded || [];
+  var raw = d.raw || {};
 
   var html = "";
 
-  // ── PRODUKT INFO ──────────────────────────────────────────────────────────
+  // ── HLAVICKA ──────────────────────────────────────────────────────────────
   html += "<div style='background:#F8F5FD;border-radius:10px;padding:14px;margin-bottom:16px'>";
-  html += "<div style='font-size:13px;font-weight:700;color:#3D2B6B;margin-bottom:6px'>" + (d.commonName||"—") + "</div>";
-  html += "<div style='font-size:11px;color:#7A6A92'>";
-  html += "<b>Sarza:</b> " + (d.batchNumber||"—") + " &nbsp;|&nbsp; ";
-  html += "<b>Vyroba:</b> " + (d.manufacturingDate||"—") + " &nbsp;|&nbsp; ";
-  html += "<b>Retest:</b> " + (d.retestDate||"—");
-  html += "</div></div>";
-
-  // ── STATISTIKY ────────────────────────────────────────────────────────────
-  html += "<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px'>";
-  html += "<div style='background:#E8F5E9;border-radius:8px;padding:12px;text-align:center'><div style='font-size:26px;font-weight:700;color:#2E7D32'>" + pass + "</div><div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>PASS</div></div>";
-  html += "<div style='background:" + (fail>0?"#FCE4EC":"#F5F5F5") + ";border-radius:8px;padding:12px;text-align:center'><div style='font-size:26px;font-weight:700;color:" + (fail>0?"#C62828":"#BDBDBD") + "'>" + fail + "</div><div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>FAIL</div></div>";
-  html += "<div style='background:#F5F5F5;border-radius:8px;padding:12px;text-align:center'><div style='font-size:26px;font-weight:700;color:#9E9E9E'>" + info + "</div><div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>INFO</div></div>";
+  html += "<div style='font-size:13px;font-weight:700;color:#3D2B6B'>" + (d.commonName||"—") + "</div>";
   html += "</div>";
 
-  // ── PROBLEMY ──────────────────────────────────────────────────────────────
-  if (issues.length > 0) {
-    html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C62828;margin-bottom:8px'>Problemy</div>";
-    for (var i=0; i<issues.length; i++) {
-      html += "<div style='background:#FFF5F5;border-left:3px solid #C62828;padding:8px 10px;margin-bottom:6px;font-size:12px;border-radius:0 6px 6px 0'>";
-      html += "<b style='color:#C62828'>" + (issues[i].param||issues[i].field||"") + "</b><br>";
-      html += "<span style='color:#7A6A92'>" + (issues[i].note||"") + "</span>";
-      html += "</div>";
-    }
-    html += "<div style='margin-bottom:14px'></div>";
-  } else {
-    html += "<div style='background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;font-size:12px;color:#2E7D32;font-weight:600;margin-bottom:16px'>Vsetky hodnoty v poriadku</div>";
-  }
-
-  // ── TEXTY Z DOKUMENTU ─────────────────────────────────────────────────────
-  var texts = [];
-  if (d.description)       texts.push({label:"Popis produktu", val:d.description});
-  if (d.storageConditions) texts.push({label:"Skladovanie",    val:d.storageConditions});
-  if (d.notes)             texts.push({label:"Poznamky",       val:d.notes});
-
-  if (texts.length > 0) {
-    html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:10px'>Texty z dokumentu</div>";
-    for (var i=0; i<texts.length; i++) {
-      html += "<div style='margin-bottom:10px'>";
-      html += "<div style='font-size:10px;font-weight:700;color:#7A6A92;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px'>" + texts[i].label + "</div>";
-      html += "<div style='font-size:11px;color:#1A0A33;background:#F8F5FD;padding:8px 10px;border-radius:6px;line-height:1.5'>" + texts[i].val + "</div>";
-      html += "</div>";
-    }
-    html += "<div style='margin-bottom:14px'></div>";
-  }
-
-  // ── POROVNAVACIA TABULKA METADAT ─────────────────────────────────────────
-  var metaRows = [
-    ["Common Name",       d.commonName],
-    ["Batch Number",      d.batchNumber],
-    ["Manufacture Date",  d.manufacturingDate],
-    ["Retest / Expiry",   d.retestDate],
-    ["Species",           d.species],
-    ["Product Code",      d.productCode],
-    ["Shelf Life",        d.shelfLife],
-    ["Allergens",         d.allergens],
-    ["GMO",               d.gmo],
-    ["Kosher",            d.kosher],
-  ];
-  var extra = d.extraMeta || {};
-  for (var k in extra) { if (extra[k]) metaRows.push([k, extra[k]]); }
-
-  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:8px'>Metadata — kontrola</div>";
-  html += "<table style='width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px'>";
+  // ── METADATA POROVNANIE ───────────────────────────────────────────────────
+  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:8px'>Metadata</div>";
+  html += "<table style='width:100%;border-collapse:collapse;font-size:11px;margin-bottom:20px'>";
   html += "<tr style='background:#3D2B6B'>";
-  html += "<th style='padding:6px 8px;text-align:left;color:#fff;font-weight:600;width:35%'>Pole</th>";
-  html += "<th style='padding:6px 8px;text-align:left;color:#fff;font-weight:600;width:50%'>Hodnota z dokumentu</th>";
-  html += "<th style='padding:6px 8px;text-align:center;color:#fff;font-weight:600;width:15%'>OK?</th>";
+  html += "<th style='padding:7px 8px;text-align:left;color:#fff;font-weight:600;width:22%'>Pole</th>";
+  html += "<th style='padding:7px 8px;text-align:left;color:#fff;font-weight:600;width:39%'>Originál (PDF)</th>";
+  html += "<th style='padding:7px 8px;text-align:left;color:#fff;font-weight:600;width:33%'>Nas XLSX</th>";
+  html += "<th style='padding:7px 8px;text-align:center;color:#fff;font-weight:600;width:6%'></th>";
   html += "</tr>";
-  for (var i=0; i<metaRows.length; i++) {
-    var label = metaRows[i][0];
-    var val   = metaRows[i][1];
-    var hasVal = val && val.trim() !== "" && val !== "—";
+
+  var metaFields = [
+    ["Common Name",      raw.commonName||d.commonName,      d.commonName],
+    ["Batch Number",     raw.batchNumber||d.batchNumber,     d.batchNumber],
+    ["Manufacture Date", raw.manufacturingDate||d.manufacturingDate, d.manufacturingDate],
+    ["Retest / Expiry",  raw.retestDate||d.retestDate,       d.retestDate],
+    ["Species",          raw.species||d.species,             d.species],
+    ["Product Code",     raw.productCode||d.productCode,     d.productCode],
+    ["Shelf Life",       raw.shelfLife||d.shelfLife,         d.shelfLife],
+    ["Allergens",        raw.allergens||d.allergens,         d.allergens],
+  ];
+  // Extra meta
+  var extra = d.extraMeta || {};
+  for (var k in extra) {
+    metaFields.push([k, extra[k], extra[k]]);
+  }
+
+  for (var i=0; i<metaFields.length; i++) {
+    var label    = metaFields[i][0];
+    var origVal  = metaFields[i][1];
+    var xlsxVal  = metaFields[i][2];
+    var hasOrig  = origVal && origVal.trim() !== "";
+    var hasXlsx  = xlsxVal && xlsxVal.trim() !== "";
+    var ok = hasOrig && hasXlsx;
+    var icon = ok ? "✓" : (hasOrig && !hasXlsx ? "⚠" : "—");
+    var iconCol = ok ? "#2E7D32" : (hasOrig && !hasXlsx ? "#E65100" : "#BDBDBD");
     var rowBg = i%2===0 ? "#F8F5FD" : "#FFFFFF";
+    if (hasOrig && !hasXlsx) rowBg = "#FFF8E1";
+
     html += "<tr style='background:" + rowBg + "'>";
     html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#7A6A92;font-weight:600'>" + label + "</td>";
-    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#1A0A33'>" + (hasVal ? val : "<span style='color:#BDBDBD'>—</span>") + "</td>";
-    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;text-align:center;font-weight:700;color:" + (hasVal?"#2E7D32":"#BDBDBD") + "'>" + (hasVal?"✓":"—") + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#1A0A33'>" + (hasOrig ? origVal : "<span style='color:#BDBDBD'>—</span>") + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#3D2B6B;font-weight:500'>" + (hasXlsx ? xlsxVal : "<span style='color:#BDBDBD'>—</span>") + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;text-align:center;font-weight:700;color:" + iconCol + "'>" + icon + "</td>";
     html += "</tr>";
   }
   html += "</table>";
 
-  // ── POROVNAVACIA TABULKA PARAMETROV ──────────────────────────────────────
-  var reasonLabels = {
-    "supplier_info":"Dodavatel","lab_info":"Lab. info",
-    "lab_appendix":"Lab. appendix","lab_personnel":"Lab. personal",
-    "lab_order_info":"Lab. objednavka"
-  };
-
-  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:8px'>Parametre — audit (" + params.length + ")</div>";
-  html += "<table style='width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px'>";
+  // ── PARAMETRE POROVNANIE ──────────────────────────────────────────────────
+  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:8px'>Parametre (" + params.length + ")</div>";
+  html += "<table style='width:100%;border-collapse:collapse;font-size:11px;margin-bottom:20px'>";
   html += "<tr style='background:#3D2B6B'>";
-  html += "<th style='padding:6px 8px;text-align:left;color:#fff;font-weight:600;width:35%'>Parameter</th>";
-  html += "<th style='padding:6px 8px;text-align:left;color:#fff;font-weight:600;width:25%'>Min / Max</th>";
-  html += "<th style='padding:6px 8px;text-align:left;color:#fff;font-weight:600;width:25%'>Výsledok</th>";
-  html += "<th style='padding:6px 8px;text-align:center;color:#fff;font-weight:600;width:15%'>OK?</th>";
+  html += "<th style='padding:7px 8px;text-align:left;color:#fff;font-weight:600;width:28%'>Parameter</th>";
+  html += "<th style='padding:7px 8px;text-align:left;color:#fff;font-weight:600;width:18%'>Orig. Min/Max</th>";
+  html += "<th style='padding:7px 8px;text-align:left;color:#fff;font-weight:600;width:16%'>Orig. Result</th>";
+  html += "<th style='padding:7px 8px;text-align:left;color:#fff;font-weight:600;width:18%'>XLSX Min/Max</th>";
+  html += "<th style='padding:7px 8px;text-align:left;color:#fff;font-weight:600;width:14%'>XLSX Result</th>";
+  html += "<th style='padding:7px 8px;text-align:center;color:#fff;font-weight:600;width:6%'></th>";
   html += "</tr>";
+
   for (var i=0; i<params.length; i++) {
     var p = params[i];
-    var st = p.status;
-    var icon = st==="pass"?"✓":st==="fail"?"✗":"·";
-    var col  = st==="pass"?"#2E7D32":st==="fail"?"#C62828":"#9E9E9E";
+    var rawMM  = p.raw_min_max || p.min_max || "—";
+    var rawRes = p.raw_result  || p.result  || "—";
+    var xlsMM  = p.min_max  || "—";
+    var xlsRes = p.result   || "—";
+    var hasData = p.result && p.result.trim() !== "";
+    var icon = hasData ? "✓" : "⚠";
+    var iconCol = hasData ? "#2E7D32" : "#E65100";
     var rowBg = i%2===0 ? "#F8F5FD" : "#FFFFFF";
-    if (st==="fail") rowBg = "#FFF5F5";
+    if (!hasData) rowBg = "#FFF8E1";
+
     html += "<tr style='background:" + rowBg + "'>";
     html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#1A0A33;font-weight:600'>" + (p.name||"") + "</td>";
-    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#7A6A92'>" + (p.min_max||"—") + "</td>";
-    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:" + col + ";font-weight:600'>" + (p.result||"—") + "</td>";
-    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;text-align:center;font-weight:700;font-size:13px;color:" + col + "'>" + icon + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#7A6A92'>" + rawMM + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#7A6A92'>" + rawRes + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#3D2B6B;font-weight:500'>" + xlsMM + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;color:#3D2B6B;font-weight:500'>" + xlsRes + "</td>";
+    html += "<td style='padding:5px 8px;border-bottom:1px solid #EDE7F6;text-align:center;font-weight:700;color:" + iconCol + "'>" + icon + "</td>";
     html += "</tr>";
-    // Ak je FAIL, pridame poznamku
-    if (st==="fail" && p.verification_note) {
-      html += "<tr style='background:#FFF5F5'>";
-      html += "<td colspan='4' style='padding:3px 8px 5px 24px;color:#C62828;font-size:10px;border-bottom:1px solid #FFCDD2'>&#9888; " + p.verification_note + "</td>";
-      html += "</tr>";
-    }
   }
   html += "</table>";
 
   // ── VYLUCENE ─────────────────────────────────────────────────────────────
   if (excluded.length > 0) {
+    var reasonLabels = {
+      "supplier_info":"Dodavatel","lab_info":"Lab. info",
+      "lab_appendix":"Lab. appendix","lab_personnel":"Lab. personal",
+      "lab_order_info":"Lab. objednavka"
+    };
     html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C62828;margin-bottom:8px'>Vylucene z dokumentu</div>";
     var groups = {};
     for (var i=0; i<excluded.length; i++) {
