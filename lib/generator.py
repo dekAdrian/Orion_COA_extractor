@@ -111,15 +111,19 @@ def _meta_pairs(data):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _parse_num(s):
-    """Extrahuje číslo a operátor z reťazca. Vracia (operator, number) alebo (None, None)"""
+    """Extrahuje číslo a operátor z reťazca. Vracia (operator, number) alebo (None, None).
+    Predpokladá že Claude už konvertoval čísla do správneho formátu (bodka ako desatinná).
+    """
     if not s: return None, None
-    s = str(s).replace(",", ".").strip()
+    s = str(s).strip()
     m = re.match(r"([<>≤≥]=?)\s*([0-9]+\.?[0-9]*)", s)
     if m:
-        return m.group(1), float(m.group(2))
+        try: return m.group(1), float(m.group(2))
+        except: return None, None
     m = re.search(r"([0-9]+\.?[0-9]*)", s)
     if m:
-        return "=", float(m.group(1))
+        try: return "=", float(m.group(1))
+        except: return None, None
     return None, None
 
 def _check_result_vs_limit(res_op, res_val, limit_op, limit_val):
