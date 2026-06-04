@@ -187,17 +187,30 @@ def verify_parameters(parameters):
         min_op = max_op = None
         min_val = max_val = None
 
-        if "/" in min_max:
+        # Detekujeme ci / je separator min/max alebo su castou jednotky (CFU/g, mg/kg...)
+        # Min/max separator: "55.0 / 70.0 %" alebo "- / 1.0 mg/kg"
+        # Jednotka: "≤1000CFU/g" alebo "≤100cfu/ml"
+        def is_minmax_separator(s):
+            # Hladame vzor: cislo/operator MEDZERA / MEDZERA cislo/operator
+            return bool(re.search(r"(\d|-)\s*/\s*(\d|-|nd|ND)", s))
+
+        if is_minmax_separator(min_max):
             parts = min_max.split("/")
+            # Berieme len prvy a druhy token (nie jednotky za druhym cislom)
             left  = parts[0].strip()
-            right = parts[1].strip() if len(parts) > 1 else ""
+            # Hladame druhy token - moze byt "1.0 mg" kde mg je jednotka
+            right_raw = "/".join(parts[1:]).strip() if len(parts) > 1 else ""
+            # Extrahujeme cislo z right
+            right = right_raw.split()[0] if right_raw else ""
             if left not in ["-", "", "nd", "ND"]:
                 min_op, min_val = _parse_num(left)
             if right.lower() not in ["nd","not detected","-",""]:
                 max_op, max_val = _parse_num(right)
-        elif re.search(r"[>≥]", min_max):
+        elif re.search(r"[>≥]", min_max) and not re.search(r"[<≤]", min_max):
+            # > alebo >= znamena minimum (result musi byt VACSI)
             min_op, min_val = _parse_num(min_max)
-        elif re.search(r"[<≤]", min_max):
+        elif re.search(r"[<≤]", min_max) and not re.search(r"[>≥]", min_max):
+            # < alebo <= znamena maximum (result musi byt MENSI)
             max_op, max_val = _parse_num(min_max)
 
         if res_val is not None:
@@ -205,24 +218,29 @@ def verify_parameters(parameters):
             # Kontrola minima
             if min_val is not None:
                 # Result musi byt >= minimum
-                # Ak result je <X a minimum je Y, a X <= Y -> mozny problem
-                if res_op in ["<", "<="] and res_val <= min_val:
-                    fail = True
-                    note = f"Hodnota {res_op}{res_val} moze byt pod minimom {min_val}"
-                elif res_op not in ["<", "<="] and res_val < min_val:
-                    fail = True
-                    note = f"Hodnota {res_val} je pod minimom {min_val}"
+                # Ak result ma < operator, je urcite MENSI nez uvedena hodnota
+                # <10 vs min 10 -> mohlo by byt problem ALE len ak je to minimum nie maximum
+                # V praxi: ≤10 je MAXIMUM nie minimum, takze toto sa sem nedostane
+                if res_op not in ["<", "<="]:
+                    if res_val < min_val:
+                        fail = True
+                        note = f"Hodnota {res_val} je pod minimom {min_val}"
+                # Ak result ma < a minimum existuje -> len warning ak res_val < min_val
+                # Napr: result <5 a min 10 -> problem. Ale <10 a min 10 -> OK (moze byt 9.9)
 
-            # Kontrola maxima
+            # Kontrola maxima (≤ alebo <)
             if not fail and max_val is not None:
-                # Ak result nema operator < a je vacsi ako max -> fail
-                if res_op not in ["<", "<="] and res_val > max_val:
-                    fail = True
-                    note = f"Hodnota {res_val} presahuje maximum {max_val}"
-                # Ak result ma < a je vacsi ako max -> aj tak fail
-                elif res_op in ["<", "<="] and res_val > max_val:
-                    fail = True
-                    note = f"Hodnota {res_op}{res_val} presahuje maximum {max_val}"
+                # Ak result < X a max je Y: ak X <= Y -> urcite OK (napr <10 vs max 1000)
+                if res_op in ["<", "<="]:
+                    if res_val > max_val:
+                        fail = True
+                        note = f"Hodnota {res_op}{res_val} presahuje maximum {max_val}"
+                    # Inak OK - <10 vs max 1000 je vzdy OK
+                else:
+                    # Standardna hodnota
+                    if res_val > max_val:
+                        fail = True
+                        note = f"Hodnota {res_val} presahuje maximum {max_val}"
 
             if fail:
                 ver = "error"
