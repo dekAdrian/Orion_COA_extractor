@@ -52,6 +52,16 @@ Return this JSON:
   "manufacturingDate": "",
   "retestDate": "",
   "species": "",
+  "raw": {
+    "commonName": "",
+    "batchNumber": "",
+    "productCode": "",
+    "manufacturingDate": "",
+    "retestDate": "",
+    "species": "",
+    "shelfLife": "",
+    "allergens": ""
+  },
   "storageConditions": "",
   "shelfLife": "",
   "allergens": "",
@@ -84,6 +94,8 @@ Return this JSON:
       "section": "",
       "name": "",
       "unit": "",
+      "raw_min_max": "",
+      "raw_result": "",
       "min_max": "",
       "result": "",
       "method": "",
@@ -98,6 +110,10 @@ RULES:
 - result: value + unit together unless separate unit column exists
 - NUMBERS: always use dot as decimal separator. Convert: 1,0->1.0, 0,05->0.05
 - THOUSANDS: 3 digits after comma = thousands: 10,000->10000, 5,426->5426
+- raw_min_max: copy EXACTLY as written in original document (before any conversion)
+- raw_result: copy EXACTLY as written in original document (before any conversion)
+- raw: copy metadata values EXACTLY as written in original document
+- min_max and result: normalized versions (dot as decimal, no thousands separators)
 - supplier: extract but it will NOT appear in output files (internal use only)
 - notes: only product notes and footnote explanations (e.g. "1 tested annually")
 - Preserve footnote markers 1 2 in parameter names
