@@ -426,56 +426,25 @@ function showVerReport() {
 
   var html = "";
 
-  // ── METADATA SEKCIA ──────────────────────────────────────────────────────
+  // ── PRODUKT INFO ──────────────────────────────────────────────────────────
   html += "<div style='background:#F8F5FD;border-radius:10px;padding:14px;margin-bottom:16px'>";
-  html += "<div style='font-size:13px;font-weight:700;color:#3D2B6B;margin-bottom:10px'>" + (d.commonName||"—") + "</div>";
-  
-  // Grid metadat
-  var metaFields = [
-    ["Šarža",           d.batchNumber],
-    ["Kód produktu",    d.productCode],
-    ["Dátum výroby",    d.manufacturingDate],
-    ["Retest / Expiry", d.retestDate],
-    ["Druh / Species",  d.species],
-    ["Trvanlivosť",     d.shelfLife],
-    ["Alergény",        d.allergens],
-    ["GMO",             d.gmo],
-    ["Kosher",          d.kosher],
-  ];
-  // Pridame extraMeta
-  var extra = d.extraMeta || {};
-  for (var k in extra) {
-    if (extra[k]) metaFields.push([k, extra[k]]);
-  }
-
-  html += "<div style='display:grid;grid-template-columns:1fr 1fr;gap:4px'>";
-  for (var i=0; i<metaFields.length; i++) {
-    var label = metaFields[i][0];
-    var val   = metaFields[i][1];
-    if (!val) continue;
-    html += "<div style='font-size:11px;padding:3px 0;border-bottom:1px solid #EDE7F6'>";
-    html += "<span style='color:#7A6A92;font-weight:600'>" + label + ":</span> ";
-    html += "<span style='color:#1A0A33'>" + val + "</span>";
-    html += "</div>";
-  }
+  html += "<div style='font-size:13px;font-weight:700;color:#3D2B6B;margin-bottom:6px'>" + (d.commonName||"—") + "</div>";
+  html += "<div style='font-size:11px;color:#7A6A92'>";
+  html += "<b>Sarza:</b> " + (d.batchNumber||"—") + " &nbsp;|&nbsp; ";
+  html += "<b>Vyroba:</b> " + (d.manufacturingDate||"—") + " &nbsp;|&nbsp; ";
+  html += "<b>Retest:</b> " + (d.retestDate||"—");
   html += "</div></div>";
 
   // ── STATISTIKY ────────────────────────────────────────────────────────────
   html += "<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px'>";
-  html += "<div style='background:#E8F5E9;border-radius:8px;padding:12px;text-align:center'>";
-  html += "<div style='font-size:26px;font-weight:700;color:#2E7D32'>" + pass + "</div>";
-  html += "<div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>PASS</div></div>";
-  html += "<div style='background:" + (fail>0?"#FCE4EC":"#F5F5F5") + ";border-radius:8px;padding:12px;text-align:center'>";
-  html += "<div style='font-size:26px;font-weight:700;color:" + (fail>0?"#C62828":"#BDBDBD") + "'>" + fail + "</div>";
-  html += "<div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>FAIL</div></div>";
-  html += "<div style='background:#F5F5F5;border-radius:8px;padding:12px;text-align:center'>";
-  html += "<div style='font-size:26px;font-weight:700;color:#9E9E9E'>" + info + "</div>";
-  html += "<div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>INFO</div></div>";
+  html += "<div style='background:#E8F5E9;border-radius:8px;padding:12px;text-align:center'><div style='font-size:26px;font-weight:700;color:#2E7D32'>" + pass + "</div><div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>PASS</div></div>";
+  html += "<div style='background:" + (fail>0?"#FCE4EC":"#F5F5F5") + ";border-radius:8px;padding:12px;text-align:center'><div style='font-size:26px;font-weight:700;color:" + (fail>0?"#C62828":"#BDBDBD") + "'>" + fail + "</div><div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>FAIL</div></div>";
+  html += "<div style='background:#F5F5F5;border-radius:8px;padding:12px;text-align:center'><div style='font-size:26px;font-weight:700;color:#9E9E9E'>" + info + "</div><div style='font-size:10px;color:#7A6A92;letter-spacing:1px'>INFO</div></div>";
   html += "</div>";
 
   // ── PROBLEMY ──────────────────────────────────────────────────────────────
   if (issues.length > 0) {
-    html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C62828;margin-bottom:8px'>Problémy</div>";
+    html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C62828;margin-bottom:8px'>Problemy</div>";
     for (var i=0; i<issues.length; i++) {
       html += "<div style='background:#FFF5F5;border-left:3px solid #C62828;padding:8px 10px;margin-bottom:6px;font-size:12px;border-radius:0 6px 6px 0'>";
       html += "<b style='color:#C62828'>" + (issues[i].param||issues[i].field||"") + "</b><br>";
@@ -484,14 +453,14 @@ function showVerReport() {
     }
     html += "<div style='margin-bottom:14px'></div>";
   } else {
-    html += "<div style='background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;font-size:12px;color:#2E7D32;font-weight:600;margin-bottom:16px'>Všetky hodnoty v poriadku</div>";
+    html += "<div style='background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;font-size:12px;color:#2E7D32;font-weight:600;margin-bottom:16px'>Vsetky hodnoty v poriadku</div>";
   }
 
   // ── TEXTY Z DOKUMENTU ─────────────────────────────────────────────────────
   var texts = [];
-  if (d.description)        texts.push({label:"Popis produktu",  val:d.description,        icon:"Popis"});
-  if (d.storageConditions)  texts.push({label:"Skladovanie",      val:d.storageConditions,  icon:"Sklad."});
-  if (d.notes)              texts.push({label:"Poznámky",         val:d.notes,              icon:"Pozn."});
+  if (d.description)       texts.push({label:"Popis produktu", val:d.description});
+  if (d.storageConditions) texts.push({label:"Skladovanie",    val:d.storageConditions});
+  if (d.notes)             texts.push({label:"Poznamky",       val:d.notes});
 
   if (texts.length > 0) {
     html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:10px'>Texty z dokumentu</div>";
@@ -506,16 +475,51 @@ function showVerReport() {
 
   // ── PRESLO vs VYLUCENE ────────────────────────────────────────────────────
   var reasonLabels = {
-    "supplier_info":"Dodávateľ","lab_info":"Lab. info",
-    "lab_appendix":"Lab. appendix","lab_personnel":"Lab. personál",
-    "lab_order_info":"Lab. objednávka"
+    "supplier_info":"Dodavatel","lab_info":"Lab. info",
+    "lab_appendix":"Lab. appendix","lab_personnel":"Lab. personal",
+    "lab_order_info":"Lab. objednavka"
   };
 
   html += "<div style='display:grid;grid-template-columns:1fr 1fr;gap:10px'>";
 
-  // Preslo
+  // PRESLO - metadata + parametre
   html += "<div>";
-  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2E7D32;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E8F5E9'>Prešlo (" + params.length + ")</div>";
+  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2E7D32;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E8F5E9'>Preslo</div>";
+
+  // Metadata sekcia
+  var metaRows = [
+    ["Common Name",       d.commonName],
+    ["Batch Number",      d.batchNumber],
+    ["Manufacture Date",  d.manufacturingDate],
+    ["Retest / Expiry",   d.retestDate],
+    ["Species",           d.species],
+    ["Product Code",      d.productCode],
+    ["Shelf Life",        d.shelfLife],
+    ["Allergens",         d.allergens],
+    ["GMO",               d.gmo],
+    ["Kosher",            d.kosher],
+  ];
+  // Pridame extraMeta
+  var extra = d.extraMeta || {};
+  for (var k in extra) {
+    if (extra[k]) metaRows.push([k, extra[k]]);
+  }
+
+  html += "<div style='font-size:9px;font-weight:700;color:#3D2B6B;letter-spacing:1px;text-transform:uppercase;margin:6px 0 4px'>Metadata</div>";
+  for (var i=0; i<metaRows.length; i++) {
+    var label = metaRows[i][0];
+    var val   = metaRows[i][1];
+    var hasVal = val && val !== "—";
+    var icon  = hasVal ? "✓" : "—";
+    var col   = hasVal ? "#2E7D32" : "#BDBDBD";
+    html += "<div style='font-size:11px;padding:3px 0;border-bottom:1px solid #F0ECF8;display:flex;align-items:flex-start;gap:5px'>";
+    html += "<span style='color:" + col + ";flex-shrink:0;margin-top:1px'>" + icon + "</span>";
+    html += "<span style='color:" + (hasVal?"#1A0A33":"#BDBDBD") + ";line-height:1.3'>" + label + (hasVal ? "" : " <i style='font-size:10px'>(prazdne)</i>") + "</span>";
+    html += "</div>";
+  }
+
+  // Parametre sekcia
+  html += "<div style='font-size:9px;font-weight:700;color:#3D2B6B;letter-spacing:1px;text-transform:uppercase;margin:10px 0 4px'>Parametre (" + params.length + ")</div>";
   for (var i=0; i<params.length; i++) {
     var p = params[i];
     var icon = p.status==="pass"?"✓":p.status==="fail"?"✗":"·";
@@ -527,11 +531,11 @@ function showVerReport() {
   }
   html += "</div>";
 
-  // Vylucene - zoskupene
+  // VYLUCENE
   html += "<div>";
-  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C62828;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #FCE4EC'>Vylúčené</div>";
+  html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C62828;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #FCE4EC'>Vylucene</div>";
   if (excluded.length === 0) {
-    html += "<div style='font-size:11px;color:#7A6A92;font-style:italic;padding:6px 0'>Žiadne vylúčené</div>";
+    html += "<div style='font-size:11px;color:#7A6A92;font-style:italic;padding:6px 0'>Ziadne vylucene</div>";
   } else {
     var groups = {};
     for (var i=0; i<excluded.length; i++) {
@@ -548,7 +552,7 @@ function showVerReport() {
         var ex = items[j];
         html += "<div style='font-size:11px;color:#7A6A92;padding:1px 0;display:flex;justify-content:space-between;gap:8px'>";
         html += "<span>" + (ex.field||ex.name||"") + "</span>";
-        if (ex.value) html += "<span style='color:#B0A0C8;font-size:10px;text-align:right'>" + ex.value + "</span>";
+        if (ex.value) html += "<span style='color:#B0A0C8;font-size:10px;text-align:right;max-width:45%'>" + ex.value + "</span>";
         html += "</div>";
       }
       html += "</div>";
