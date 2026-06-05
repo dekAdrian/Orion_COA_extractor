@@ -1,6 +1,20 @@
-import json, base64, os
+import json, base64, os, re
 from http.server import BaseHTTPRequestHandler
 import urllib.request
+
+# CJK Unicode bloky — čínština, japončina, kórejčina
+_CJK = re.compile(r'[⺀-⿿　-〿぀-鿿豈-﫿︰-﹏＀-￯]+')
+
+def _strip_cjk(obj):
+    """Rekurzívne odstráni CJK znaky zo všetkých stringových hodnôt v JSON objekte."""
+    if isinstance(obj, str):
+        cleaned = _CJK.sub(' ', obj)
+        return re.sub(r'\s{2,}', ' ', cleaned).strip()
+    if isinstance(obj, list):
+        return [_strip_cjk(i) for i in obj]
+    if isinstance(obj, dict):
+        return {k: _strip_cjk(v) for k, v in obj.items()}
+    return obj
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
@@ -354,6 +368,9 @@ class handler(BaseHTTPRequestHandler):
             if start != -1 and end > start:
                 raw = raw[start:end]
             extracted = json.loads(raw)
+
+            # Vyčistí čínske/CJK znaky zo všetkých polí — bez ohľadu na prompt
+            extracted = _strip_cjk(extracted)
 
             # Merge allTexts do notes — záchranná sieť pre remarks ktoré Claude zabudol
             # Preskočí texty ktoré Claude už dal do excluded (supplier, lab, personnel info)
