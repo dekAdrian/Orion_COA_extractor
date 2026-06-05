@@ -528,6 +528,22 @@ function showVerReport() {
     }
   }
 
+  // ── TEXTY Z DOKUMENTU (allTexts) ─────────────────────────────────────────
+  var allTexts = d.allTexts || [];
+  if (allTexts.length > 0) {
+    html += "<div style='font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3D2B6B;margin-bottom:8px'>Texty z dokumentu</div>";
+    html += "<div style='background:#F8F5FD;border-radius:6px;padding:7px 10px;margin-bottom:16px'>";
+    for (var i=0; i<allTexts.length; i++) {
+      var at = allTexts[i];
+      if (!at || !at.text) continue;
+      html += "<div style='font-size:11px;padding:3px 0;border-bottom:1px solid #EDE7F6;line-height:1.5'>";
+      if (at.label) html += "<span style='color:#3D2B6B;font-weight:600'>" + at.label + ":</span> ";
+      html += "<span style='color:#1A0A33'>" + at.text + "</span>";
+      html += "</div>";
+    }
+    html += "</div>";
+  }
+
   document.getElementById("verReportContent").innerHTML = html;
 }
 function closeVerReport() {
