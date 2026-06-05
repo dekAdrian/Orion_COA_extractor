@@ -47,14 +47,23 @@ def _bdr(c=BORDER):
     s = Side(style="thin", color=c)
     return Border(left=s, right=s, top=s, bottom=s)
 
+def _fix_right(ws, col, row, c=BORDER):
+    """Opraví chýbajúci pravý okraj na poslednej bunke zlúčeného rozsahu."""
+    s = Side(style="thin", color=c)
+    ws[f"{col}{row}"].border = Border(right=s, top=s, bottom=s)
+
 def _fill(c):
     return PatternFill(fill_type="solid", fgColor=c)
 
 def _est_h(txt, w, base=15, mn=15):
     if not txt: return mn
-    ch = max(1, int(w * 1.15))
+    ch = max(1, int(w * 1.1))
     lines = max(1, (len(str(txt)) + ch - 1) // ch)
-    return max(mn, base * lines)
+    return max(mn, int(base * lines * 1.25))  # 25% buffer pre isotu
+
+def _row_h(cells_and_widths, mn=15):
+    """Vypočíta výšku riadku ako maximum zo všetkých buniek."""
+    return max((_est_h(txt, w) for txt, w in cells_and_widths), default=mn)
 
 def _logo_png():
     logo_bytes = base64.b64decode(LOGO_B64)
@@ -360,18 +369,20 @@ def generate_xlsx(data, output_path):
         c.fill  = _fill(META_VAL)
         c.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True, indent=1)
         c.border = _bdr()
+        _fix_right(ws, "E", row)
         row += 1
 
     # Description
     desc = data.get("description","")
     if desc:
-        ws.row_dimensions[row].height = max(_est_h(desc,90),20)
+        ws.row_dimensions[row].height = _est_h(desc, 90, mn=20)
         ws.merge_cells(f"A{row}:E{row}")
         c = ws[f"A{row}"]
         c.value = f"Description: {desc}"
         c.font  = Font(name="Calibri", size=8, italic=True, color=MUTED)
         c.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True, indent=1)
         c.border = _bdr()
+        _fix_right(ws, "E", row)
         row += 1
 
     # Spacer
@@ -422,9 +433,24 @@ def generate_xlsx(data, output_path):
             c.fill  = _fill(SECTION_BG)
             c.alignment = Alignment(horizontal="left", vertical="center", indent=2)
             c.border = _bdr("B0A0C8")
+            _fix_right(ws, "E", row, "B0A0C8")
             row += 1
 
-        ws.row_dimensions[row].height = max(_est_h(p.get("name",""), wA+wB), 15)
+        if lo["has_sep_mm"] and lo["has_method"]:
+            mm = " – ".join(v for v in [str(p.get("min_value","")), str(p.get("max_value",""))] if v)
+            h_cells = [(p.get("name",""), wA+wB), (mm, wC), (p.get("result",""), wD), (p.get("method",""), wE)]
+        elif lo["has_sep_mm"]:
+            h_cells = [(p.get("name",""), wA+wB), (p.get("min_value",""), wC),
+                       (p.get("max_value",""), wD), (p.get("result",""), wE)]
+        elif lo["has_unit"]:
+            h_cells = [(p.get("name",""), wA+wB), (p.get("unit",""), wC),
+                       (p.get("min_max",""), wD), (p.get("result",""), wE)]
+        elif lo["has_method"]:
+            h_cells = [(p.get("name",""), wA+wB), (p.get("min_max",""), wC),
+                       (p.get("result",""), wD), (p.get("method",""), wE)]
+        else:
+            h_cells = [(p.get("name",""), wA+wB), (p.get("min_max",""), wC), (p.get("result",""), wD)]
+        ws.row_dimensions[row].height = _row_h(h_cells)
         bg = PARAM_ODD if i % 2 == 0 else PARAM_EVEN
         st   = p.get("status","pass")
         icon = "✓" if st=="pass" else "✗" if st=="fail" else "·"
@@ -474,7 +500,7 @@ def generate_xlsx(data, output_path):
     for txt in [data.get("notes",""),
                 ("Storage: " + data.get("storageConditions","")).strip()]:
         if txt and txt not in ["Storage: ",""]:
-            ws.row_dimensions[row].height = max(_est_h(txt,90),18)
+            ws.row_dimensions[row].height = _est_h(txt, 90, mn=18)
             ws.merge_cells(f"A{row}:E{row}")
             c = ws[f"A{row}"]
             c.value = txt
@@ -482,6 +508,7 @@ def generate_xlsx(data, output_path):
             c.alignment = Alignment(horizontal="left", vertical="center",
                                     wrap_text=True, indent=1)
             c.border = _bdr()
+            _fix_right(ws, "E", row)
             row += 1
 
     # Footer
