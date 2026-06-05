@@ -199,14 +199,19 @@ RULES:
   * Footnote explanations: "* tested annually", "(1) performed by external lab"
   * Regulatory compliance statements: "Comply with EC regulation 231/2012"
   * Any row in the parameter table that has text spanning full width without spec/result values
+  * "Remarks:" rows in tables: e.g. "Remarks: NaCl to be calculated as on dry basis." → notes
+  * "Informace byly převzaty z atestu výrobce." → notes
   * Concatenate all such texts with newline separator
   * Do NOT include storageConditions text (that goes in storageConditions field separately)
   * When in doubt — include it in notes rather than lose it
+  * ALWAYS check the very bottom of tables and below tables for Remarks rows
 - Preserve footnote markers * ** 1 2 in parameter names
 - allTexts: list of ALL free text blocks found in document (every non-table text), each with label and text. Examples: {"label": "Remarks", "text": "NaCl to be calculated as on dry basis."}, {"label": "Conclusion", "text": "Conform to specification."}, {"label": "Note", "text": "* tested annually"}. This is the complete text inventory for audit purposes.
 - excluded reasons: "supplier_info", "lab_info", "lab_appendix", "lab_personnel", "lab_order_info", "customer_info", "logistics_info"
 - Fatty acid appendix → ONE entry: {"field": "Fatty acid profile (detail)", "value": "X rows", "reason": "lab_appendix"}
 - Section header rows (no values) → has_sections=true, NOT in parameters list
+- IMPORTANT: Do NOT put mapped fields in excluded. If you mapped "Sarze" to batchNumber or "Datum expirace" to retestDate — do NOT add them to excluded. Excluded is ONLY for data that was found but completely omitted from output.
+- IMPORTANT: Do NOT put explanatory comments in excluded like "THIS IS EXPIRY DATE". Excluded entries should be actual field names and values from the document.
 
 filename: {filename}"""
 
