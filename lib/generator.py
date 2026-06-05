@@ -90,8 +90,13 @@ def _calc_layout(data):
     mx_name   = max(mx_name,   layout.get("max_param_chars",   0))
     mx_mm     = max(mx_mm,     layout.get("max_minmax_chars",  0))
     mx_res    = max(mx_res,    layout.get("max_result_chars",  0))
+    # Certifikát bez špecifikácií — stĺpec SPECIFICATION skryjeme
+    has_spec  = any(
+        str(p.get("min_max","")).strip() or str(p.get("min_value","")).strip() or str(p.get("max_value","")).strip()
+        for p in params
+    )
     return {"has_unit": has_unit, "has_method": has_method, "has_sections": has_sect,
-            "has_sep_mm": has_sep_mm,
+            "has_sep_mm": has_sep_mm, "has_spec": has_spec,
             "mx_name": mx_name, "mx_mm": mx_mm, "mx_res": mx_res,
             "mx_unit": mx_unit, "mx_method": mx_method}
 
@@ -314,12 +319,18 @@ def generate_xlsx(data, output_path):
     thin_p = Side(style="thin",   color="D5C5EC")
     lo     = _calc_layout(data)
     wA, wB, wC, wD, wE = 20, 24, 20, 18, 8
+    # Ak certifikát nemá špecifikácie — stĺpec C skryjeme a jeho šírku pridáme k B
+    hide_spec = not lo.get("has_spec", True)
+    if hide_spec:
+        wB += wC  # B dostane šírku skrytého C
 
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Certificate of Analysis"
     for col, w in zip("ABCDE", [wA,wB,wC,wD,wE]):
         ws.column_dimensions[col].width = w
+    if hide_spec:
+        ws.column_dimensions["C"].hidden = True
 
     # Header
     ws.row_dimensions[1].height = 65
