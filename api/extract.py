@@ -27,7 +27,7 @@ FIELD MAPPING — always map these variants to our standard fields:
 
 ALWAYS EXCLUDE from output (put in excluded list, NOT in extraMeta):
 - Supplier name, manufacturer name, laboratory name, distributor name, company address
-- Country of origin
+- Company name printed at the TOP of the document as the issuing company header (e.g. "Nanjing Panda Biotechnology Co., Ltd", "Fenchem Biotek Ltd") → reason: supplier_info. This is different from the product's Country of Origin which MUST be kept.
 - Issue Date, Issue date (lab document date, NOT manufacture date)
 - writtenBy, approvedBy, signedBy, analyzedBy, checkedBy, controlledBy, Signed By
 - Kontroloval, Skontroloval, Vystavil, Schvalil, Vydal (Slovak/Czech lab personnel)
@@ -39,11 +39,14 @@ ALWAYS EXCLUDE from output (put in excluded list, NOT in extraMeta):
 - Laboratory accreditation info, RvA numbers, SGS certifications
 - Any person name associated with lab work (analyst, QC manager signatures, Operator, Auditor)
 - Disclaimer and confidentiality text
+- Company stamp / supplier stamp entries (e.g. "FARAVELLI Group | PRODUCT CODE | INTERNAL BATCH | CONTROLLED BY") → reason: supplier_info
+- Internal batch numbers or codes from the SUPPLIER's system (not the product batch number)
 - Place of manufacture (manufacturing facility address)
 - Transportation, Packaging logistics info (how goods are transported/packaged)
 - Storage and Handling logistics table (but DO extract the actual storage temperature/conditions into storageConditions)
 
 ALWAYS INCLUDE in extraMeta (product-specific fields only):
+- Country of Origin (e.g. "China", "Germany", "Netherlands") — ALWAYS keep this, never exclude it
 - QA Status (e.g. "Approved")
 - Food Safety Acceptance Criteria (e.g. "Meets UK and EU legislation")
 - Intended Use (e.g. "Food use")
@@ -76,8 +79,23 @@ COLUMN DETECTION RULES:
    → method = text on sub-row under parameter name (e.g. "GM001 all.03")
    → Copy values EXACTLY as written — do not modify or combine
 
-6. REVERSED columns (Result BEFORE Specification)
+6. De Wit 5-col: Parameter | Unit | Min | Max | Results  (result AFTER limits)
+   → unit=Unit, min_value=Min, max_value=Max, result=Results
+   → has_unit_column=true, has_separate_minmax=true, has_method_column=false
+   → Recognizable by: unit column before min/max columns, result is the LAST column
+   → Example: "C8:0 Caprylic | A% | 55.0 | 70.0 | 57.8"
+
+7. REVERSED columns (Result BEFORE Specification)
    → Always correctly identify: Specification→min_max, Result→result regardless of column order
+
+BILINGUAL DOCUMENTS (Chinese/English or other language pairs):
+- When document contains both Chinese and English text, extract ONLY the English version
+- Translate any Chinese-only values or labels to English
+- Parameter names: use English version only (e.g. "砷/Arsenic" → "Arsenic")
+- Meta labels: use English version only (e.g. "批号/Batch No." → "Batch No.")
+- Values: "符合规定 Conforms" → "Conforms", "未检出 Not Detected" → "Not Detected"
+- Conclusion/notes text: translate to English if Chinese-only
+- Batch quantity (e.g. "20kg") → goes into notes, NOT into parameters
 
 LAYOUT CONFIDENCE — set layout.layout_confidence:
 - "high": document clearly matches one of the 6 layouts above (certain about column mapping)
@@ -122,6 +140,8 @@ MULTI-DOCUMENT PDFs:
 - PDF may contain multiple documents (cover page, delivery note, CoA for different customer)
 - Always extract from the document that contains actual analytical parameters (Test/Specification/Result table)
 - Ignore customer commercial info (Customer PO#, Customer Name, Sales Order#, delivery confirmation pages)
+- If a separate attached LAB REPORT (e.g. AGROLAB, SGS, Eurofins) contains only fatty acid profile (C4:0, C6:0, C8:0...) or detailed analytical appendix → exclude entirely as ONE entry: {"field": "Fatty acid profile (detail)", "value": "X rows", "reason": "lab_appendix"}
+- The main CoA document is always the one with company branding, product name, batch number and general QC parameters — extract from that page only
 
 FILENAME: "Internal_[ProductName]_[BatchNumber]" — spaces to underscores, no special chars
 
@@ -332,14 +352,27 @@ class handler(BaseHTTPRequestHandler):
             extracted = json.loads(raw)
 
             # Merge allTexts do notes — záchranná sieť pre remarks ktoré Claude zabudol
+            # Preskočí texty ktoré Claude už dal do excluded (supplier, lab, personnel info)
+            excluded_reasons = {"supplier_info", "lab_info", "lab_personnel",
+                                "lab_order_info", "customer_info", "logistics_info"}
+            excluded_vals = set()
+            for e in (extracted.get("excluded") or []):
+                if e.get("reason","") in excluded_reasons:
+                    excluded_vals.add(str(e.get("value","")).strip().lower())
+
             all_texts = extracted.get("allTexts") or []
             notes = extracted.get("notes") or ""
             for item in all_texts:
                 text = str(item.get("text", "")).strip()
                 label = str(item.get("label", "")).strip()
-                if text and text not in notes:
-                    entry = f"{label}: {text}" if label else text
-                    notes = (notes + "\n" + entry).strip() if notes else entry
+                if not text or text in notes:
+                    continue
+                # Preskočí ak text obsahuje niečo z excluded hodnôt
+                text_lower = text.lower()
+                if any(ev and ev in text_lower for ev in excluded_vals):
+                    continue
+                entry = f"{label}: {text}" if label else text
+                notes = (notes + "\n" + entry).strip() if notes else entry
             extracted["notes"] = notes
 
             # Verifikácia
