@@ -106,53 +106,27 @@ h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
     <!-- Result -->
     <div id="resultSection" style="display:none">
 
-      <!-- Download -->
+      <!-- Step 2: Ver report -->
       <div class="card">
-        <div class="sec"><span class="num">2</span>Stiahnuť výstup</div>
+        <div class="sec"><span class="num">2</span>Skontrolovať výsledky</div>
+        <button class="btn" onclick="showVerReport()">&#128203; Otvoriť Verifikačný report</button>
+      </div>
+
+      <!-- Step 3: Download -->
+      <div class="card">
+        <div class="sec"><span class="num">3</span>Stiahnuť výstup</div>
         <div class="btn-row">
           <button class="btn" onclick="download('xlsx')">&#8595; Stiahnuť XLSX</button>
           <button class="dl-btn" id="chatToggleBtn" onclick="toggleChat()">&#9998; Upraviť dáta</button>
         </div>
       </div>
 
-      <!-- Inline ver report -->
-      <div class="card" style="padding:0;overflow:hidden">
-        <div style="background:#2D1557;padding:10px 16px;display:flex;align-items:center;gap:12px;border-radius:11px 11px 0 0">
-          <span style="color:#C9A8F0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase">&#128203; Verifikačný report</span>
-          <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
-            <span style="color:#C9A8F0;font-size:11px">Strana:</span>
-            <button onclick="pdfPrevPage()" style="background:#3D2B6B;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px">&#8592;</button>
-            <span id="pdfPageInfo" style="color:#fff;font-size:12px;min-width:50px;text-align:center">1 / 1</span>
-            <button onclick="pdfNextPage()" style="background:#3D2B6B;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px">&#8594;</button>
-          </div>
-        </div>
-        <div id="verPanels" style="display:flex;height:80vh;min-height:500px">
-          <div id="verLeft" style="overflow-y:auto;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;padding:20px;gap:16px;width:55%;min-width:20%;max-width:80%">
-            <canvas id="pdfCanvas" style="width:100%;max-width:900px;box-shadow:0 4px 24px rgba(0,0,0,0.6);border-radius:4px"></canvas>
-            <div id="pdfPlaceholder" style="display:none;color:#7A6A92;font-size:13px;text-align:center;padding:80px 20px">
-              <div style="font-size:48px;margin-bottom:16px">&#128247;</div>
-              <div>Nahľad nie je dostupný pre tento formát súboru</div>
-            </div>
-          </div>
-          <div id="verDivider" style="width:6px;background:#3D2B6B;cursor:col-resize;flex-shrink:0;transition:background 0.2s;position:relative"
-            onmouseenter="this.style.background='#6B4FA0'"
-            onmouseleave="this.style.background=isDragging?'#6B4FA0':'#3D2B6B'">
-            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">
-              <div style="width:2px;height:20px;background:rgba(255,255,255,0.3);border-radius:1px"></div>
-            </div>
-          </div>
-          <div id="verRight" style="overflow-y:auto;background:#fff;flex:1;min-width:20%">
-            <div id="verReportContent" style="padding:20px"></div>
-          </div>
-        </div>
-      </div>
-
       <!-- Chat (skrytý, toggleable) -->
       <div id="chatSection" style="display:none" class="card">
-        <div class="sec"><span class="num">3</span>Doladiť s AI</div>
+        <div class="sec"><span class="num">4</span>Doladiť s AI</div>
         <div class="chat-box" id="chatBox">
           <div class="msg msg-ai">
-            <div class="bubble">Extrakcia hotová. Napíšte čo chcete zmeniť — napr. "Zmeň batch number na X" alebo "Pridaj parameter Y".</div>
+            <div class="bubble">Extrakcia hotová. Napíšte čo chcete zmeniť.</div>
           </div>
         </div>
         <div class="chat-row">
@@ -165,6 +139,39 @@ h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
 
     </div>
   </div>
+
+<!-- VERIFIKAČNÝ REPORT POPUP -->
+<div id="verPopup" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:200">
+  <div style="position:absolute;top:0;left:0;right:0;height:48px;background:#2D1557;display:flex;align-items:center;padding:0 16px;gap:12px;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
+    <span style="color:#C9A8F0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase">&#128203; Verifikačný report</span>
+    <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+      <span style="color:#C9A8F0;font-size:11px">Strana:</span>
+      <button onclick="pdfPrevPage()" style="background:#3D2B6B;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px">&#8592;</button>
+      <span id="pdfPageInfo" style="color:#fff;font-size:12px;min-width:50px;text-align:center">1 / 1</span>
+      <button onclick="pdfNextPage()" style="background:#3D2B6B;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px">&#8594;</button>
+    </div>
+    <button onclick="closeVerReport()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:6px;padding:5px 14px;cursor:pointer;font-size:13px;margin-left:12px">&#10005; Zavrieť</button>
+  </div>
+  <div id="verPanels" style="position:absolute;top:48px;left:0;right:0;bottom:0;display:flex">
+    <div id="verLeft" style="overflow-y:auto;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;padding:20px;gap:16px;width:58%;min-width:20%;max-width:80%">
+      <canvas id="pdfCanvas" style="width:100%;max-width:900px;box-shadow:0 4px 24px rgba(0,0,0,0.6);border-radius:4px"></canvas>
+      <div id="pdfPlaceholder" style="display:none;color:#7A6A92;font-size:13px;text-align:center;padding:80px 20px">
+        <div style="font-size:48px;margin-bottom:16px">&#128247;</div>
+        <div>Nahľad nie je dostupný pre tento formát súboru</div>
+      </div>
+    </div>
+    <div id="verDivider" style="width:6px;background:#3D2B6B;cursor:col-resize;flex-shrink:0;transition:background 0.2s;position:relative"
+      onmouseenter="this.style.background='#6B4FA0'"
+      onmouseleave="this.style.background=isDragging?'#6B4FA0':'#3D2B6B'">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:3px">
+        <div style="width:2px;height:20px;background:rgba(255,255,255,0.3);border-radius:1px"></div>
+      </div>
+    </div>
+    <div id="verRight" style="overflow-y:auto;background:#fff;flex:1;min-width:20%">
+      <div id="verReportContent" style="padding:20px"></div>
+    </div>
+  </div>
+</div>
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -187,7 +194,7 @@ function renderPdfPage(num) {
     var canvas = document.getElementById("pdfCanvas");
     var ctx = canvas.getContext("2d");
     var leftPanel = document.getElementById("verLeft");
-    var panelWidth = leftPanel ? leftPanel.offsetWidth - 40 : Math.floor(window.innerWidth * 0.55) - 40;
+    var panelWidth = leftPanel ? leftPanel.offsetWidth - 40 : Math.floor(window.innerWidth * 0.58) - 40;
     var baseViewport = page.getViewport({scale: 1});
     var scale = panelWidth / baseViewport.width;
     var viewport = page.getViewport({scale: scale});
@@ -339,6 +346,7 @@ async function extract() {
 function showVerReport() {
   if (!currentData) return;
   loadPdfForViewer();
+  document.getElementById("verPopup").style.display = "block";
 
   var d = currentData;
   var params = d.parameters || [];
@@ -482,6 +490,12 @@ function showVerReport() {
 
   document.getElementById("verReportContent").innerHTML = html;
 }
+function closeVerReport() {
+  document.getElementById("verPopup").style.display = "none";
+  pdfDoc = null;
+  pdfPage = 1;
+}
+
 function toggleChat() {
   var section = document.getElementById("chatSection");
   var btn = document.getElementById("chatToggleBtn");

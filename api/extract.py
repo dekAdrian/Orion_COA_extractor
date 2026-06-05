@@ -90,12 +90,14 @@ COLUMN DETECTION RULES:
 
 BILINGUAL DOCUMENTS (Chinese/English or other language pairs):
 - When document contains both Chinese and English text, extract ONLY the English version
-- Translate any Chinese-only values or labels to English
+- This applies to ALL fields including raw.* fields — NEVER include Chinese characters anywhere in output
 - Parameter names: use English version only (e.g. "砷/Arsenic" → "Arsenic")
 - Meta labels: use English version only (e.g. "批号/Batch No." → "Batch No.")
+- Product name: "维生素 K2 油/ Vitamin K2 oil" → "Vitamin K2 oil" (both commonName AND raw.commonName)
 - Values: "符合规定 Conforms" → "Conforms", "未检出 Not Detected" → "Not Detected"
 - Conclusion/notes text: translate to English if Chinese-only
 - Batch quantity (e.g. "20kg") → goes into notes, NOT into parameters
+- Company name in document header (e.g. "南京磁达生物科技有限公司 / NANJING PANDA BIOTECHNOLOGY CO., LTD") → excluded as supplier_info
 
 LAYOUT CONFIDENCE — set layout.layout_confidence:
 - "high": document clearly matches one of the 6 layouts above (certain about column mapping)
