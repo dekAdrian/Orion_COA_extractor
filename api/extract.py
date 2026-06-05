@@ -287,8 +287,8 @@ class handler(BaseHTTPRequestHandler):
                 )
             })
             payload = {
-                "model": "claude-sonnet-4-5",
-                "max_tokens": 8000,
+                "model": "claude-sonnet-4-6",
+                "max_tokens": 16000,
                 "messages": messages
             }
         else:
@@ -299,8 +299,8 @@ class handler(BaseHTTPRequestHandler):
                 {"type": "image", "source": {"type": "base64", "media_type": file_type, "data": file_b64}}
             )
             payload = {
-                "model": "claude-sonnet-4-5",
-                "max_tokens": 8000,
+                "model": "claude-sonnet-4-6",
+                "max_tokens": 16000,
                 "messages": [{
                     "role": "user",
                     "content": [block, {"type": "text", "text": PROMPT.replace("{filename}", filename)}]
@@ -321,6 +321,7 @@ class handler(BaseHTTPRequestHandler):
             with urllib.request.urlopen(req) as resp:
                 result = json.loads(resp.read())
 
+            truncated = result.get("stop_reason") == "max_tokens"
             raw = "".join(b.get("text","") for b in result.get("content",[])).strip()
             raw = raw.replace("```json","").replace("```","").strip()
             # Najdeme prvy { a posledny } pre pripad ze je okolo extra text
@@ -351,6 +352,11 @@ class handler(BaseHTTPRequestHandler):
                 "has_errors": any(i.get("note") for i in param_issues + meta_issues)
             }
             extracted["sanity_warnings"] = _sanity_check(extracted)
+            if truncated:
+                extracted["sanity_warnings"].insert(0, {
+                    "level": "error",
+                    "msg": "Výstup bol skrátený — certifikát je príliš veľký, parametre na konci môžu chýbať"
+                })
 
             self._json(200, {"data": extracted})
 

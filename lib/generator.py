@@ -204,7 +204,17 @@ def verify_parameters(parameters):
             # Rozlisuje "55.0 / 70.0" alebo "≥55 / ≤70" (min/max) od "CFU/g" (jednotka bez medzier)
             return bool(re.search(r"(?:[≥>≤<]?\s*[\d.]|-)\s+/\s+(?:[≥>≤<]?\s*[\d.]|-|\b(?:nd|ND|not\s+detected)\b)", s))
 
-        if is_minmax_separator(min_max):
+        # Rozsah s pomlčkou: "99.0-101.0%" alebo "55-70 mg/kg"
+        dash_m = re.match(r"([\d.]+)\s*-\s*([\d.]+)", min_max)
+        if dash_m and not re.search(r"[<>≤≥/]", min_max):
+            try:
+                min_val = float(dash_m.group(1))
+                max_val = float(dash_m.group(2))
+                min_op = ">="
+                max_op = "<="
+            except Exception:
+                pass
+        elif is_minmax_separator(min_max):
             parts = min_max.split("/")
             # Berieme len prvy a druhy token (nie jednotky za druhym cislom)
             left  = parts[0].strip()
