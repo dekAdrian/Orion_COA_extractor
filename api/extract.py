@@ -76,7 +76,13 @@ COLUMN DETECTION RULES:
    → method = text on sub-row under parameter name (e.g. "GM001 all.03")
    → Copy values EXACTLY as written — do not modify or combine
 
-6. REVERSED columns (Result BEFORE Specification)
+6. De Wit 5-col: Parameter | Unit | Min | Max | Results  (result AFTER limits)
+   → unit=Unit, min_value=Min, max_value=Max, result=Results
+   → has_unit_column=true, has_separate_minmax=true, has_method_column=false
+   → Recognizable by: unit column before min/max columns, result is the LAST column
+   → Example: "C8:0 Caprylic | A% | 55.0 | 70.0 | 57.8"
+
+7. REVERSED columns (Result BEFORE Specification)
    → Always correctly identify: Specification→min_max, Result→result regardless of column order
 
 LAYOUT CONFIDENCE — set layout.layout_confidence:
@@ -122,6 +128,8 @@ MULTI-DOCUMENT PDFs:
 - PDF may contain multiple documents (cover page, delivery note, CoA for different customer)
 - Always extract from the document that contains actual analytical parameters (Test/Specification/Result table)
 - Ignore customer commercial info (Customer PO#, Customer Name, Sales Order#, delivery confirmation pages)
+- If a separate attached LAB REPORT (e.g. AGROLAB, SGS, Eurofins) contains only fatty acid profile (C4:0, C6:0, C8:0...) or detailed analytical appendix → exclude entirely as ONE entry: {"field": "Fatty acid profile (detail)", "value": "X rows", "reason": "lab_appendix"}
+- The main CoA document is always the one with company branding, product name, batch number and general QC parameters — extract from that page only
 
 FILENAME: "Internal_[ProductName]_[BatchNumber]" — spaces to underscores, no special chars
 
