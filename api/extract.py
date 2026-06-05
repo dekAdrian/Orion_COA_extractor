@@ -157,7 +157,7 @@ Return this JSON:
 
 RULES:
 - status: pass=within spec, fail=outside spec, info=Conforms/Complies/Passes test/not applicable
-- min_max: normalized combined spec "55.0 / 70.0 %" or "≥99.0%" or "- / 1 mg KOH/g" — include unit
+- min_max: normalized combined spec. When BOTH min and max exist: "55.0 / 70.0 %". When ONLY max exists: "≤ 1 mg KOH/g" or "max. 2000 CFU/g" (NO dash-slash, just the operator+value). When ONLY min exists: "≥ 99.0%" or "min. 50%". Never use "- / X" format.
 - result: value + unit together unless separate unit column
 - supplier: extract for internal reference only, NOT in output files
 - notes: product notes and footnote explanations only ("* tested annually", "(1) external lab")
