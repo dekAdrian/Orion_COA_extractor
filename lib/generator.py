@@ -69,9 +69,10 @@ def _logo_png():
 def _calc_layout(data):
     layout = data.get("layout", {})
     params = data.get("parameters", [])
-    has_unit   = layout.get("has_unit_column", False)
-    has_method = layout.get("has_method_column", False)
-    has_sect   = layout.get("has_sections", False)
+    has_unit      = layout.get("has_unit_column", False)
+    has_method    = layout.get("has_method_column", False)
+    has_sect      = layout.get("has_sections", False)
+    has_sep_mm    = layout.get("has_separate_minmax", False)
     mx_name   = max((len(str(p.get("name","")))    for p in params), default=20)
     mx_mm     = max((len(str(p.get("min_max",""))) for p in params), default=15)
     mx_res    = max((len(str(p.get("result","")))  for p in params), default=12)
@@ -81,21 +82,26 @@ def _calc_layout(data):
     mx_mm     = max(mx_mm,     layout.get("max_minmax_chars",  0))
     mx_res    = max(mx_res,    layout.get("max_result_chars",  0))
     return {"has_unit": has_unit, "has_method": has_method, "has_sections": has_sect,
+            "has_sep_mm": has_sep_mm,
             "mx_name": mx_name, "mx_mm": mx_mm, "mx_res": mx_res,
             "mx_unit": mx_unit, "mx_method": mx_method}
 
+def _dash(v):
+    """Vráti hodnotu alebo pomlčku ak je prázdna"""
+    return v if v and str(v).strip() else "—"
+
 def _meta_pairs(data):
     std_l = [
-        ("Common Name",       data.get("commonName","")),
-        ("Batch Number",      data.get("batchNumber","")),
-        ("Species",           data.get("species","")),
-        ("Product Code",      data.get("productCode","")),
+        ("Common Name",       _dash(data.get("commonName",""))),
+        ("Batch Number",      _dash(data.get("batchNumber",""))),
+        ("Species",           _dash(data.get("species",""))),
+        ("Product Code",      _dash(data.get("productCode",""))),
     ]
     std_r = [
-        ("Manufacture Date",  data.get("manufacturingDate","")),
-        ("Retest / Expiry",   data.get("retestDate","")),
-        ("Shelf Life",        data.get("shelfLife","")),
-        ("Allergens",         data.get("allergens","")),
+        ("Manufacture Date",  _dash(data.get("manufacturingDate",""))),
+        ("Retest / Expiry",   _dash(data.get("retestDate",""))),
+        ("Shelf Life",        _dash(data.get("shelfLife",""))),
+        ("Allergens",         _dash(data.get("allergens",""))),
     ]
     extra = data.get("extraMeta", {}) or {}
     ex = list(extra.items())
@@ -367,14 +373,23 @@ def generate_xlsx(data, output_path):
     # Param header
     ws.row_dimensions[row].height = 20
     ws.merge_cells(f"A{row}:B{row}")
-    if lo["has_unit"]:
+    if lo["has_sep_mm"] and lo["has_method"]:
+        # 5 stlpcov: PARAMETER | MIN VALUE | MAX VALUE | TEST VALUE | METHOD
+        hdrs = [("A","PARAMETER","left"),("C","MIN VALUE","center"),
+                ("D","MAX VALUE","center"),("E","TEST VALUE","center")]
+        # Method pojde do extra stlpca - pridame F
+    elif lo["has_sep_mm"]:
+        # 5 stlpcov bez method: PARAMETER | MIN VALUE | MAX VALUE | RESULT
+        hdrs = [("A","PARAMETER","left"),("C","MIN VALUE","center"),
+                ("D","MAX VALUE","center"),("E","RESULT","center")]
+    elif lo["has_unit"]:
         hdrs = [("A","PARAMETER","left"),("C","UNIT","center"),
-                ("D","MIN / MAX","left"),("E","RESULT","center")]
+                ("D","SPECIFICATION","left"),("E","RESULT","center")]
     elif lo["has_method"]:
         hdrs = [("A","PARAMETER","left"),("C","SPECIFICATION","left"),
                 ("D","RESULT","center"),("E","METHOD","center")]
     else:
-        hdrs = [("A","PARAMETER","left"),("C","MIN / MAX","left"),
+        hdrs = [("A","PARAMETER","left"),("C","SPECIFICATION","left"),
                 ("D","RESULT","center"),("E","","center")]
     for col,label,align in hdrs:
         c = ws[f"{col}{row}"]
@@ -415,7 +430,15 @@ def generate_xlsx(data, output_path):
         c.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True, indent=1)
         c.border = _bdr()
 
-        if lo["has_unit"]:
+        if lo["has_sep_mm"] and lo["has_method"]:
+            vals = [("C",p.get("min_value",""),False,MUTED,"center"),
+                    ("D",p.get("max_value",""),False,MUTED,"center"),
+                    ("E",p.get("result",""),True,TEXT,"center")]
+        elif lo["has_sep_mm"]:
+            vals = [("C",p.get("min_value",""),False,MUTED,"center"),
+                    ("D",p.get("max_value",""),False,MUTED,"center"),
+                    ("E",p.get("result",""),True,TEXT,"center")]
+        elif lo["has_unit"]:
             vals = [("C",p.get("unit",""),False,MUTED,"center"),
                     ("D",p.get("min_max",""),False,MUTED,"left"),
                     ("E",p.get("result",""),True,TEXT,"center")]
@@ -454,10 +477,10 @@ def generate_xlsx(data, output_path):
 
     # Footer
     row += 1
-    ws.row_dimensions[row].height = 46
+    ws.row_dimensions[row].height = 80
     ws.merge_cells(f"A{row}:B{row}")
     c = ws[f"A{row}"]
-    c.value = "QA Manager\n\n________________________\nSignature & Date"
+    c.value = "QA Manager\n\n\n________________________\nSignature & Date"
     c.font  = Font(name="Calibri", size=9, color=TEXT)
     c.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True, indent=1)
     ws.merge_cells(f"C{row}:E{row}")
@@ -556,7 +579,7 @@ def generate_ods(data, output_path):
         "th":   rs("rh_th",   0.65),
         "par":  rs("rh_par",  0.55),
         "not":  rs("rh_not",  0.7),
-        "foot": rs("rh_foo",  1.5),
+        "foot": rs("rh_foo",  2.8),
     }
 
     # Col widths (5 cols)
