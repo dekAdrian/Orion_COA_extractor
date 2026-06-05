@@ -247,7 +247,7 @@ class handler(BaseHTTPRequestHandler):
             })
             payload = {
                 "model": "claude-sonnet-4-5",
-                "max_tokens": 4000,
+                "max_tokens": 8000,
                 "messages": messages
             }
         else:
@@ -259,7 +259,7 @@ class handler(BaseHTTPRequestHandler):
             )
             payload = {
                 "model": "claude-sonnet-4-5",
-                "max_tokens": 4000,
+                "max_tokens": 8000,
                 "messages": [{
                     "role": "user",
                     "content": [block, {"type": "text", "text": PROMPT.replace("{filename}", filename)}]
@@ -288,6 +288,17 @@ class handler(BaseHTTPRequestHandler):
             if start != -1 and end > start:
                 raw = raw[start:end]
             extracted = json.loads(raw)
+
+            # Merge allTexts do notes — záchranná sieť pre remarks ktoré Claude zabudol
+            all_texts = extracted.get("allTexts") or []
+            notes = extracted.get("notes") or ""
+            for item in all_texts:
+                text = str(item.get("text", "")).strip()
+                label = str(item.get("label", "")).strip()
+                if text and text not in notes:
+                    entry = f"{label}: {text}" if label else text
+                    notes = (notes + "\n" + entry).strip() if notes else entry
+            extracted["notes"] = notes
 
             # Verifikácia
             from lib.generator import verify_parameters, verify_meta
