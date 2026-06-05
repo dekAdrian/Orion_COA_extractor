@@ -100,31 +100,41 @@ def _calc_layout(data):
             "mx_name": mx_name, "mx_mm": mx_mm, "mx_res": mx_res,
             "mx_unit": mx_unit, "mx_method": mx_method}
 
-def _dash(v):
-    """Vráti hodnotu alebo pomlčku ak je prázdna"""
-    return v if v and str(v).strip() else "—"
+def _fmt_label(key):
+    """camelCase → Title Case: countryOfOrigin → Country of Origin"""
+    import re as _re
+    spaced = _re.sub(r'([A-Z])', r' \1', str(key)).strip()
+    return spaced[0].upper() + spaced[1:] if spaced else key
 
 def _meta_pairs(data):
-    std_l = [
-        ("Common Name",       _dash(data.get("commonName",""))),
-        ("Batch Number",      _dash(data.get("batchNumber",""))),
-        ("Species",           _dash(data.get("species",""))),
-        ("Product Code",      _dash(data.get("productCode",""))),
-    ]
-    std_r = [
-        ("Manufacture Date",  _dash(data.get("manufacturingDate",""))),
-        ("Retest / Expiry",   _dash(data.get("retestDate",""))),
-        ("Shelf Life",        _dash(data.get("shelfLife",""))),
-        ("Allergens",         _dash(data.get("allergens",""))),
-    ]
-    extra = data.get("extraMeta", {}) or {}
-    ex = list(extra.items())
-    for k in range(0, len(ex), 2):
-        std_l.append(ex[k])
-        std_r.append(ex[k+1] if k+1 < len(ex) else ("",""))
-    while len(std_l) < len(std_r): std_l.append(("",""))
-    while len(std_r) < len(std_l): std_r.append(("",""))
-    return list(zip(std_l, std_r))
+    """Vráti len neprázdne meta polia, párované do dvoch stĺpcov."""
+    fields = []
+    for label, key in [
+        ("Common Name",      "commonName"),
+        ("Batch Number",     "batchNumber"),
+        ("Manufacture Date", "manufacturingDate"),
+        ("Retest / Expiry",  "retestDate"),
+        ("Species",          "species"),
+        ("Product Code",     "productCode"),
+        ("Shelf Life",       "shelfLife"),
+        ("Allergens",        "allergens"),
+        ("GMO",              "gmo"),
+        ("Kosher",           "kosher"),
+    ]:
+        val = str(data.get(key, "")).strip()
+        if val:
+            fields.append((label, val))
+    # extraMeta — len neprázdne, label naformátovaný
+    for k, v in (data.get("extraMeta") or {}).items():
+        if str(v).strip():
+            fields.append((_fmt_label(k), str(v)))
+    # Spáruj do ľavý/pravý stĺpec
+    pairs = []
+    for i in range(0, len(fields), 2):
+        left  = fields[i]
+        right = fields[i+1] if i+1 < len(fields) else ("", "")
+        pairs.append((left, right))
+    return pairs
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # VERIFIKÁCIA
