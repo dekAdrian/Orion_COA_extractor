@@ -90,12 +90,16 @@ COLUMN DETECTION RULES:
 
 BILINGUAL DOCUMENTS (Chinese/English or other language pairs):
 - When document contains both Chinese and English text, extract ONLY the English version
-- Translate any Chinese-only values or labels to English
-- Parameter names: use English version only (e.g. "砷/Arsenic" → "Arsenic")
-- Meta labels: use English version only (e.g. "批号/Batch No." → "Batch No.")
+- NEVER include Chinese characters (or any non-Latin script) ANYWHERE in the output JSON
+- This applies to EVERY field: commonName, raw.*, notes, allTexts labels and texts, parameter names, values, excluded entries — everything
+- Parameter names: "砷/Arsenic" → "Arsenic", "过氧化值/Peroxide Value" → "Peroxide Value"
+- Meta labels: "批号/Batch No." → "Batch No.", "生产日期/Manufacturing date" → "Manufacturing date"
+- Product name: "维生素 K2 油/ Vitamin K2 oil" → "Vitamin K2 oil" (ALL fields including raw.commonName)
 - Values: "符合规定 Conforms" → "Conforms", "未检出 Not Detected" → "Not Detected"
-- Conclusion/notes text: translate to English if Chinese-only
+- allTexts: labels and texts must be English only — translate Chinese labels, strip Chinese from bilingual text
+- notes: English only — translate conclusion text (e.g. "按照GB标准... The product is inspected..." → keep only English part)
 - Batch quantity (e.g. "20kg") → goes into notes, NOT into parameters
+- Company name in document header → excluded as supplier_info (do NOT include Chinese company name in any field)
 
 LAYOUT CONFIDENCE — set layout.layout_confidence:
 - "high": document clearly matches one of the 6 layouts above (certain about column mapping)
