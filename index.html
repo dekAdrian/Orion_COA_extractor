@@ -13,33 +13,10 @@ body{font-family:"Segoe UI",system-ui,sans-serif;background:#F0ECF8;color:#1A0A3
 .hdr img{height:30px;filter:brightness(0) invert(1)}
 .hdr-badge{margin-left:12px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:3px 12px;border-radius:20px;font-size:10px;letter-spacing:2px;text-transform:uppercase}
 
-/* Layout */
-.layout{display:grid;grid-template-columns:1fr 300px;gap:0;min-height:calc(100vh - 58px)}
-
 /* Main */
-.main{padding:28px 24px;overflow-y:auto}
+.main{max-width:1100px;margin:0 auto;padding:28px 24px}
 h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
 .sub{color:#7A6A92;font-size:13px;margin-bottom:24px}
-
-/* Sidebar */
-.sidebar{background:#fff;border-left:1px solid #D5C5EC;padding:20px 16px;overflow-y:auto}
-.sb-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#3D2B6B;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #F0ECF8;display:flex;align-items:center;gap:6px}
-
-/* Ver report box */
-.ver-summary{background:#F8F5FD;border:1px solid #D5C5EC;border-radius:8px;padding:12px;margin-bottom:16px}
-.ver-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px;border-bottom:1px solid #EDE7F6}
-.ver-row:last-child{border-bottom:none}
-.ver-label{color:#7A6A92}
-.ver-pass{color:#2E7D32;font-weight:700}
-.ver-fail{color:#C62828;font-weight:700}
-.ver-check{color:#E65100;font-weight:700}
-.ver-empty{color:#7A6A92;font-size:12px;font-style:italic;text-align:center;padding:12px 0}
-.ver-issues{margin-top:10px}
-.ver-issue{font-size:11px;color:#C62828;padding:3px 0;border-bottom:1px solid #FCE4EC;line-height:1.4}
-.ver-issue:last-child{border-bottom:none}
-
-/* History */
-
 
 /* Card */
 .card{background:#fff;border:1px solid #D5C5EC;border-radius:12px;padding:22px 26px;margin-bottom:16px;box-shadow:0 2px 10px rgba(61,43,107,0.05)}
@@ -62,8 +39,7 @@ h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
 .dl-btn{background:transparent;color:#3D2B6B;border:1.5px solid #3D2B6B;border-radius:8px;padding:9px 18px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;align-items:center;gap:5px}
 .dl-btn:hover{background:#F0ECF8}
 .dl-btn:disabled{opacity:.4;cursor:not-allowed}
-.ver-btn{background:#F0ECF8;color:#3D2B6B;border:1px solid #D5C5EC;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;align-items:center;gap:5px}
-.ver-btn:hover{background:#EDE7F6}
+.dl-btn.active{background:#EDE7F6;border-color:#6B4FA0}
 
 /* Status */
 .status{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;margin-bottom:14px;font-size:13px;font-weight:500}
@@ -97,10 +73,7 @@ h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
   <span class="hdr-badge">CoA Extractor</span>
 </div>
 
-<div class="layout">
-
-  <!-- MAIN -->
-  <div class="main">
+<div class="main">
     <h1>Certificate of Analysis</h1>
     <p class="sub">Nahrajte externý CoA &#8594; AI extrahuje a overí dáta &#8594; stiahnite výstup</p>
 
@@ -137,16 +110,45 @@ h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
       <div class="card">
         <div class="sec"><span class="num">2</span>Stiahnuť výstup</div>
         <div class="btn-row">
-          <button class="dl-btn" onclick="download('xlsx')">&#8595; Stiahnuť XLSX</button>
-          <button class="ver-btn" onclick="showVerReport()">&#128203; Ver. report</button>
-        </div>
-        <div class="info-box">
-          XLSX / ODS &#8594; otvorte v LibreOffice pre úpravy &nbsp;|&nbsp; PDF &#8594; tlač a archivácia
+          <button class="btn" onclick="download('xlsx')">&#8595; Stiahnuť XLSX</button>
+          <button class="dl-btn" id="chatToggleBtn" onclick="toggleChat()">&#9998; Upraviť dáta</button>
         </div>
       </div>
 
-      <!-- Chat -->
-      <div class="card">
+      <!-- Inline ver report -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="background:#2D1557;padding:10px 16px;display:flex;align-items:center;gap:12px;border-radius:11px 11px 0 0">
+          <span style="color:#C9A8F0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase">&#128203; Verifikačný report</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+            <span style="color:#C9A8F0;font-size:11px">Strana:</span>
+            <button onclick="pdfPrevPage()" style="background:#3D2B6B;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px">&#8592;</button>
+            <span id="pdfPageInfo" style="color:#fff;font-size:12px;min-width:50px;text-align:center">1 / 1</span>
+            <button onclick="pdfNextPage()" style="background:#3D2B6B;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px">&#8594;</button>
+          </div>
+        </div>
+        <div id="verPanels" style="display:flex;height:600px">
+          <div id="verLeft" style="overflow-y:auto;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;padding:20px;gap:16px;width:55%;min-width:20%;max-width:80%">
+            <canvas id="pdfCanvas" style="width:100%;max-width:900px;box-shadow:0 4px 24px rgba(0,0,0,0.6);border-radius:4px"></canvas>
+            <div id="pdfPlaceholder" style="display:none;color:#7A6A92;font-size:13px;text-align:center;padding:80px 20px">
+              <div style="font-size:48px;margin-bottom:16px">&#128247;</div>
+              <div>Nahľad nie je dostupný pre tento formát súboru</div>
+            </div>
+          </div>
+          <div id="verDivider" style="width:6px;background:#3D2B6B;cursor:col-resize;flex-shrink:0;transition:background 0.2s;position:relative"
+            onmouseenter="this.style.background='#6B4FA0'"
+            onmouseleave="this.style.background=isDragging?'#6B4FA0':'#3D2B6B'">
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">
+              <div style="width:2px;height:20px;background:rgba(255,255,255,0.3);border-radius:1px"></div>
+            </div>
+          </div>
+          <div id="verRight" style="overflow-y:auto;background:#fff;flex:1;min-width:20%">
+            <div id="verReportContent" style="padding:20px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat (skrytý, toggleable) -->
+      <div id="chatSection" style="display:none" class="card">
         <div class="sec"><span class="num">3</span>Doladiť s AI</div>
         <div class="chat-box" id="chatBox">
           <div class="msg msg-ai">
@@ -164,67 +166,6 @@ h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
     </div>
   </div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-
-    <!-- Verifikácia -->
-    <div class="sb-title">&#9989; Verifikácia</div>
-    <div id="verBox">
-      <div class="ver-empty">Zatiaľ žiadna extrakcia</div>
-    </div>
-
-
-
-  </div>
-
-</div><!-- end layout -->
-
-<!-- VER REPORT POPUP -->
-<div id="verPopup" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:200">
-
-  <!-- Toolbar -->
-  <div style="position:absolute;top:0;left:0;right:0;height:48px;background:#2D1557;display:flex;align-items:center;padding:0 16px;gap:12px;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
-    <img src="data:image/webp;base64,UklGRhoeAABXRUJQVlA4WAoAAAAQAAAA6AIAAwEAQUxQSHAPAAABHARt2yYJf9bffp1BREwAoxQUCsWcBNho54FW6RsDDDl0Ml95ITCNxaytoqETFArIT1i17dS1toRIQAISkFAJSEACEioBCZWABCQgIQ7ycR+nUBI6zldETACk2nbDRh+CIBiCIRhCIRhCIBhCIQhCIRhCIAiCGGQ55zwlmW1EBKTYtsM2hSAIgmAIgmAIghAIghAIghAIgmAIgvAZ3HVS/ff/MiICevuQcqm1yadca835CA7f4CHm2mXCVnP031sunk0mbyX5ryuKpctDuebwPeVSk4fzldwXlEtN1thO/9VEscpK++m/lVxhWW7P7gspVFl0jY9wQU2nlw8zG+rCk+vpPsy7tFBl4Xy6+bKo2ms98xG0qTLzQLM8eZ9eZd6FhSqrv8Jsvqnyd6/5cHtHj85X0bDGuYBTo1/5ymHjdmxURMseWURW6tcruU2jRxZZFI2JwrNiItJPv2U7LldF2XOQoKaaiPTT7Rc9qsSi7+4gqConIi3Sbu2Y6BKd3TigqCfCxe0VPSLfRes8QBT9ROQKW7UDiqL52TkUC4jUsFH0cE5R/msYiglEatinFQwVUT8GhmIDkRp2iRYKNbHgwlCMIFJqkCsSamLDs1OoVhAbMdLioCZWzElRswLsFuIKg5oY0o0BNTPAuwRIi6KKKc/OwLMd2C3AFUQRY+aHgTcEjPhoIWSx58EgWoJVwlsRHGJRZ3BaAmvR0fQ7Nsl1GoLLEtCjW/qbGPU0hJoUZnA09VnMmp2ANymsEtsS78Ww7Gf4i7bgKaHRtDfLCPsZcNqCp4S2pGexLfsZ0GzBviLjEu7YOML+F45tgV2RTeFFzMvXDxCNwVMCo8p2MnmvV84xhODwz9Ja62OsdarY9QNcxuApgU3ZZZp25Rgchrc+lp3HLj+gbgyeEhdVtJMJuebDY+ra389hPOV7BGswA5uiy6h6Hg7PLH3aSawf4LQG77iokp0M5CsFPPx673OYP6BuDXpcU3K+7Uoea7zedgqv7xHMYVdYVMX9lnYGLPX+3IT2PS5r8JSwpuBDPr+Sw3rbN29h9XtiazDDouotH3A5CIu2lTfgKV8jmYM7rKmX/8PlwNJtZT3zezRzWImKqvaQP7kcWL+tLKd/H8zBJ6yptvx2HVDSvuVWv8ZlDu6oqGK7iNRIULTvYp7vnT2sRDW1OunZQduZtYyvUczBiMqK0JCvAxrbr5bra2cPalAMkS5dIhKh9CdLn6/hw/CYp6y19mV8orIi0KUmPzvUtl3J+HqpFGKu/DxaUAx54ZI/o17SUcnl6HcXPYpXVFa0xS5/d6g+snC5+9m/UUkLiqEsdvlv1E121vHyKGl44YrKiqzY5d8d6nudFZ+SraziCoohKlT5MOqno4zpVbJVNaOyoohO+bTDgrOMy63Udg0lKIag0OXjaAL1rFqOpSNLXlLHBq3IOeXzDiP2LKJ5Vj8rttYBMsS4JjdmK6hn0eNa9iugSdUGrUg5WG5kMoN61tBdS14wtQ6QoSTJrScM2bNmO5fzplUbtKKjyL3OEupZQncux7m1fkBeKqjIvRds2bNke9fGp1YFuEVQk5sPY2iU0L1b0lvsBOkSqMnNHeacJcu7Bs2lVQFuBdTk7mQPHRU07/rSL7ETpAsocjsZRF7xcW8Jf8QqwO2/yO0FJj0LqN41YVM7Qbr3LPcfNrEseLtXsFxiFeB2HuX+DqP2AvM/4a52gnTXngecVtHB090r2alWAW7P1GWgN4t+/PL/ZZfcCdIdXzKwwa4WONV9Z5GrALffJCOTYTT4t3sFW+VOkO7V8xBnGS18+/+yTa4C3F6bjGyw7UnT3A/2pXeCdJ9ZhibjdHy6Fzv0KsDt0vEYZxwt2vyf6EfwBGkeqwztsK4FTHPv6BKsAJfDQ8ae5tGg3+4X+ig+QJq/PijYRz94ux8oii3B5S7LWIaBG8yVXC2Q5ox40GUhLfjlXf+eJbicZRkcTWTJruxqgTRXjkc5E2mxSL0kW4LL1SmDO4wc7K20SdYCaY6IRxUrTfadXktwOcoyOlpJga70aoE0N8TDnJkmSn4tf7jcRBnNMLMl2tKr9UOalz7sspMWOoT+qTb74XISZHg2lKGf/Gr8kOajjAuGkpPbt98jS3C6IBlPluokxXXYIy2Q6iGO6zD1STbXaaot3BKcHtq4aquDfLk+p1rCtUDq+U7GZ1sZOV3XXTJynp8miLbSD1yuZeq3cjlIPb5NEIz1Ac2zn2tIb+Q83cmEsHZyeE5z3dLlIPXwOAGby8HmuM7VtDdyHn5NUM31AW+/JHP/aZeD1LNlwstcBg6/ca6tvpHz6DBDNpd+L9jmWurlIPXkvCUHt9x6mXvIb+Q8uc4Q7NXfr0x2y5eD1INlSxTY9upk8qK/kfPcMIUzmGN4LZPtP/1ykHpsngIGny8XZPIZQSPHsdem9Jdrs/UI5KCVU/umKLHLZZbZSwgNZBxKMmMz2caaRy+zP38hyEErZ4YpqsnWixFP9wqigYwz07Z83ouaTF+DkINWjjy3pb9XkemfvygGyDiyboteq8j8rzC0QSsn8r6c70SXPLDGMUDGibIvv1dyTR74+YtDG7Rynt+Y9UaB5Yl3JANknBc25ngfOuWR+y8SbdDKcWljxuuELs98xTJAxnF5Y/rLuCoPtRKLNmjltHNj9CqhyGPHXzADZJxW5+hvT6zyXC7RaIPbJaL7JG55R2F5cv4LZ4D0PNVJsHSfLnk4Uzza4D5s1oT5kM4qC4wIaIB0j1fUvj60yTIbdkQb3B6b5nOOOiaI9mFPBkh3eGvO9juxJ9rgdjgCK2Oicky7MkC6v3dgeUxW7sCuKMDtbwWWDHNiXyZId7cDC2Mu1RptjALc7gjMjamascfOTJDu7ooLY5tmEVujALe7O6w2SBQ/sTkTpHsbYV1jSLGC3VGA29sKK48JejXanwnSnZnkOsUx5lCrEfZHAS5n1KjcmKxVI+zQBGmH8DR3UIyxRalG2CIFuA6p07yDugZVnRphkyZI8/UolhnzIFG5EXZJAS5flJjCGKdSJezTBGlH5HluvTQFxh4aFTxbrQJcvqbeMEMdlBVK2KsJ0k6I8+yQ8qCqDgdslgJcJ4R5uOTmGfwg1qYStusAaQf4iUZAjLFelM1YoF5LcB2AiR65dYIyKOrSPHZMC6Qd0Oehqm0TxEFFlYw1CrYE1wF1opdamZAGsSLVYde0QNr/nxNtsW6CC2O9qNkPLFOx5Q/X/6eJuLSGCeKgpAUnLFSx1g+p/x5mmlrzBDSo6cCZsHlmP5z/bqRpvcYVjHWiYU+EtUrWAq9WrQDpUtu4Y1BSoEYsV7Ml6OU/8pEqwzsGt9Vx8ViwZi3watWLpAkN4/IgJ2u/ItYs2hL06oFOoXmcG5SWdhFWLVoLvFqxoVSd17CCwX1p7F4GS9CLdaJTJw8Lg4KsvbwMWuDVih2lqHQyumJwqnPz4l4GS9CLJztUxmFx1OyLry+DFni12sZaFVlGdazVEpfwMhjptQqUKbKPiovR4uvLIAevVvtlqRKdDO5YrQUu8WVopNd+4I/ENCosR5PvL4McvFqpYJrCa1DFggOX/DI00mt/8KNQBocVTZ7pXZCDaaUT5qXvGFSw5I1LfhkaeK1So63IK2OY1jR4ce+CHEyr1AnzkdfHJCx68+VlaOC1Sg+aW5yXoRWrHrz4d0EOplUabkXbOYTdsuR8fRkaeK1K/Wg+2vqQhHU3XsK7IAfTKifOrczLyIqVO99fhgZeq9IStyrsHMG0tJa4xHdBDqYVynEeYX1EwNoX3+ldaOC1KjvPW9YhAxMWb4lLfhfkYFqhTp5bVRlQsPzFM70LDbxW5SywSxPJ/Y3WZ4HL+S7IwbRCS56nSIr3NYKCkxf3LgzwWoX6FrAktdvYQ8Xgr3dBG0wrbBVMQV7uZg8dJy/hXRjgNQvlFXQ95S720HLz9V3QBqOyldDVEN/EHmoOXo53YYDXLNQuoYlJci97KLr5nQttsD9p1Nilpd/THDQdPD0XA5T4IO0S7FJyyK2NoKvzVlKhDfYnjRrsElJvKdC28YxcDFDig/SrwS4ZXm7kCH2dt5IKbbA/qRVhl4pyQ/NQuCXOzMUAJT5IXoR1DU4+P6Hz4qmp0Ab7kyyLoEsoH7UApS35lYsBSm51WmW8BTj5kDP0XjwtFdrg1H8rypjF/flBcVDcgl+5GA8ZdTzVOfG/ioPuk6enQvsZ+tVhzXeWfxYH9YPfuRgPsayD4dnxHz07GHDyvFKh8xk6KlnVb5GfXA4YcfNWUjEfol2J3V6diPRywI6DZ6RC8ZCWlfApLum8koctN09NxXyIjlqs+zsuiTDnKJipUDxEv1pYlyt/sog4e8h5rlTMp1gWw7t4canLzw6DtoKVCsVDNMqxURy41OTP0yJynpaK+RStctj9cJea/NebxJJ/UqF4inY97Fc51qUm/++w6eLpqZiPsbgB2HAr8meTj0+jWPK7ZELxFPW8A8h1rIViYbnTGUWLZ6RiPkbzJiL9dKs4ziY3V5g1eCuZUDxG6y4i0pJ7GoVcZWC0y+R5p2I+R34fEenn8RgfzyZjOwwbPDUTiufovNPPmgNN5uNZZcJomU/BTMV8kJ2H/WxXDm4CCjFfTSZlsow2T8uE4jmy57zfW805huA+oRBCzmdtMneCaUfBSsV8kC479MNea5cHdxh387RMWCryd5mDpx/W6QU7E1qawLNxKsxb5qNnwlgTeLaNs497gJVEKKsCz5bJMHCZj5EJYlVAzS4NFiaez0oikHUBNauwMxHyfMxMEOsCuowSYWPi+aiJQFYGKCYpsHJ+wCcTxNogGqTBzn0+WiKQ1UFga3QyVHzAygSxOnDNFuxh6T4fPRHI+oCKJdjD1McDdiaI9QEim4E9jF3n45UIZI3gmhHYw9rhAVYSQawRkE3AHvau8zESgawTfNePPQzuH2A1EcQ6gbJ2jWDyMh8zEShKAb6pVgg2dw/gSoRTC0isV4LZywNWIlD0AhWleoDdieejJcIpBviq0UWwfH7AkwgUzYDQteEDtieej54IpxsQ41EXwfr5ATsRKMpBMx7TAzawz8dIhFNPmucjOGEL4wOs5AFFP2ns23MmbGKfj5EIZwGped6ZM2EbjwdQ84BiAsnmedeeCTtZ6vyvH5515o7GOq9fnKuPPkhS+8YNW8SX8sfzVlw8vpk/Hne5Dnw/97XLuUTCl7R9vmddOwO+rUO++nQ1H4QvbQq5VJ6i1xw9vr8pHDnX2m5p9co5BHyhU/gv4YsWVlA4IIQOAACQdQCdASrpAgQBPikUh0KhoQrFLhgMAUJZ27hdT4A/gH4AfoB+eDTkkWg/135gcGFsn+O/wf7Mf0np7OkfAXyAYGWUfPL8a/Sv9b/af7n72P+R/s/yA+dPmAfpt+w/+Q+OHpT/s3oD/Xr9u/dk/4n6Ye6D9oPYA/oP9N//H/H94T/veyj6AX7U///2W/95+5/wO/1T/i/ud7Tf//9gD0AP+314/QD+AfgB+gH8V/f3v8Hi6I+wQVIxP+kFdkWbT510HhMu+6m7H8IkZeeJiuo3k0km/7D3B9qh0vMF18BeeDQkFzPFU/+4PtUOl8YpsAK1+nfXtCchGIzR9+PXjzuqr5+Z5VytQOV6GYEfuN0ByLqwDcQmHnk+Vw2kRR/to+GgcJ6WhSFYcuadUINcMNufuLNA9ILyCw8liz3wUYFy3TtOyoatqRKKRo1QtQN1QfOmbz20SV4WH/f57eoYtVK5l0j3Cng/hEjLwzaky2Iw1sdCKzXgfVJ29ebXM99oEf3jUT47bcMM7aR2aj2hjLjIPoXEXUtrRpwhNcVS6aA2E+3WE2iEmSN8QOzf/+kzVUDxQpGSPpB5LwzKsa4AO6pPo5YpkQyiP5dsjsrFnssBmiDYZJbmg1FyKtaIcPS35g26OdGoPjXq879IPIG1Nym+QIKShSCw8liz2tupPI7hVbQ+P/SC3limLVwwMRGGxhXRgkdpV+XM8Emduuy+6ucgb9P12l84Mei6hGFEkSBWimLVwnIK01h4ZUy88TCwSh79H5rXtVdF75ewmrN6GaApRYZvt/imKYtXCcf62iDBFcKHuTsnSqufO+DUgs9tJRWFuQ9Ph5Pc5wBJBtDeHX0+AEj5Zo87zQ43rRxPhl4ZtODfN7aH29AFDeSfNrV1PrYHrIs7Z6xrfJeCXBAevp3k+kHmL+1G7ao0+VbMOUianDwcSaTQdKOWNIRBX2ffZ9b1AXF1HC/8MkLbuhiJdOcTqoYtWyv6mxB/P1YlGb+iXf20wvLWWIDYL7UhvqZUMoapy2D9Z0Xjv1A3ZJl8zjEmBw54iPp9DjFoofyaK4X/zAOYyYh8YeTix99rsvurnIHZwGIjDY0WKYgXeBXIK/74CSEc/ZzJgpi1cJ0joLD0vpdNAbCfbi5FFTydaCI4j0V4cVdQHOxvuik08CtDQmDbqq6ZgBS9+Pz+srUKrntmulG5LPi1IJPoxhfJsuSZfnrktnH+VLdx3nVKefV8BI+kFyDOe7scgznvPpCAroPEei8vsuJAAP60GakNfeVbKu4/XxN1iFJSMFdEOdkx9YKvf93TObbNxUGF4byN6uK9ir1JV0nGv6+n95a6DGvi/2FaYHWUZXLryDnzZ2djwNHJN8B7CwKO8H+rOn0fdxtjrDVCix5z1CFY9nFFfBQXzCuk0CUE+FfgbfvKg4N0F5/QqOoGa4Un9z56ak/Cmi3Z4jfdsMBKXzoglbApkS4wU4ScY69Rk0AUMikz95UFfEfV4cGLbXTbUK+Sjava3IhAFQ1kHz///oV3nGxQSqX2FKuSdvDPHvfdG3bBXn3lO7/66JrSDSBHtOhPKjYrugwoY/y5bGB0Jr/2PWMLtyH5lBv4ABego4o/syTLl66vlzUFMdUh6+YJVt0ANHHcOP4BQfr8YZgeG5cDywuP7mWRANHeHFijabe0XWVWIUSXUmdFR4rpYs/R0nIJHqJO4Ye8NQBsidULpFgacrJ99SAF0Z/BDIZYx+/UsQeX2MfP82MaeFaBxtoPv7ydSE1KJ80H9gg0uQrvf6f221L+VOGJbjXR/PguvJIS2Bxi+CMaoiNlbhFvGfvCj96sDvHXmFogNZjtA4b2SseHdMJ80AK+fuYtUIbJzIoYHn8usa++VnelOd6nIIbhJe7f3+ijMTxQM/MYxf16Cd5G/gmdtqiXtBKZGLRamZDDbXJOHn4w5LAeqxu9dBuqW5w41L9ImBqo2wtDfBZvlDaB+XcqYLT3iT4hHkYyBF4mS+vjGXp+icoDn+EJRv5brgGIF595R39xxeY/eTo48i1jkDcljMy1YxbYTBC4oU/3hNq+eKtBvWBZKSJYpSzm+36gvdKEh8/eDC0EO2WprMCpeAPbOG21str9UYkDFyJ/oecd5GtQkaJyOjQlhCXdxF36wQCQ38wqsVXUG49MoWa8zGxeCwuKyECkvIM8X2slN+/CCzwRZOwHuaEtq47e6GIbCE/DvUVLveFCISedkFbnwFFytVMaGEoBWGPd00VQUvUnADPzXrJyfIkZDNhbrzg9PAQm5tf9q0iYlL8wXKainA3T4HZiVj+EqK4mxLxZ2ggTgG+gT1DL94MtyC6EfN7DmGHMMJfpgy/H+VZavkEGT1q6T+HXoCWsFCUDELsh+/UsQe/8wvic9Sc08V17x5F3Sp2iB6A8YBgW2mwTtBE5ZIi+dmbn1CPq1uyUt6fwzktG+x6sggkrsz3fMmd4/fGMvT9E5QHP8ISjfy3XAMR7/eXsb3EmF0kwrrrEpN4aYdl58RBGUZzF4ITa/QgJjryJjBEmApoAADi5ele2up8/oUykBOVO/OvronOqgbqv3Pim6z6KdpwuioXIy/JFGe6zJbnAu9S4oK/iLfnCIekWR6bQKPxLWQ4NOZKy3994K6PNVqJI1oeLpV2xXxXe0sUd1HAz4K8uULOKLFyZaaN8zYM47M3BNdc8JPzfzSTH4WUY4Wqq4G6vVglV2SUlApPvDBY7Jr3jh0/Xluv2zfdebpH4n4ECfl1onUA8nxOQbGkqZYe2E8n3laS/e129xmtXC7+rGJEfd8rPNln1VtQNlJuQE6l3GHPdPpcG6y90CY9W7yxZ1tjEFFQuRl+Lp1zcqsVXUG3GebM0U1OYQLMfyyS+db85rPxIay74s9riPg+l4fheDJ6rnFvy78J6AdSC8mM++8pEXOJ39+buAXwjZw0ZSyqSTQ56W+V0NMRqP7pW1/B4DPRfMQt8TGklAKHg1kgLxrHNyoIImKjTmAxrSNxTZp2hIeSjbBfJHs2xKDP4Y7Lx8ybhT8fPlHVJMMw2L6p4Itz+FZg0MGIbd0DQ0AHf3k62XKuDvOWGmI+tojk7L4p79xY7C31cdvc7oP73AA2doqW6W+eCkE13+kZbp/uwx3QPgtVDhjQO1dCxalY5wVU75Wyefz9Wh8jMnIudBfxWETNwZFqR5C7PniljT2O9IRlKiQLr2bcyLitX6VsYXT7F9BpgsAVsmO8s3tpGXD7sFesR45BmvZHLkqno2/uOxCdkLaQKQU0Du2hoGoA/Ao5CbjVFP9hO75CALwAzq1f6KaDYf0eqCs4RJS/eHT7wgXLbZQhyailUR0Py+EeixRXP6WKLzPi+OTVthjaEMNeEqz9Co0+m856pGvcwAUAtqDqXHh+89gNJ3nwC2Xq/wnCr5AlpBgqEfC6PEskjL3DI65oa+Sz9OSj74C3RvpREDubX66xKThmXR/fci/bFnY/PG+8LqeQKIWz0utfA57NuG3MaD7ycylSxQ3/xhh1kNWeebPi2DfxXS3zwUg1f/X2brnIU43pmP7xWfdHUHjR+cCc9ShfP3WTfTHQS5QpzAY1S8acXbPEuHQH34rCJm4Mi1I8hdnzxSxp7HekM/iIdTbpj4fv5lWBM7/uAV8gcSpuoif5vbqPBu79aHkiCWlyPeGP5VEmK+TGlZGaD95R39xxeF222B/mdO/bn84MXn3fDE/16SmkHkLJzGX3G8N/eF5EGb9NLaA/xuuhoy8u81nc9cr9dwdnuVa670bGLZWCstAeuoS2bnX/SES6ZWcntP9OZDbYbs5kuwH8q7oiTMlbSaVAjn/0rCJm4Mi1QL7oLnmYMVYV+a7pZehU+919uqiUEWs3706WrOCXVkimzTxExuUp3dcPczj4aR5fKBMLPrSEWDCesKId2lyQFwc1Q5XP6bBKtubkRpXf7ypXfyR56v5/ccXws8kePPzgYqgE9USG0uu0ignSDILhcgxO6wP7w6feFWexyUkSzo4h9REJA8TaoeUE6C5cf0bSmhOvizqYcLz0a7PIEGkYlm8tOqLGEpfEhwbwzsliRIRYBx7dEPPNnxZ8DKPFX8N86slezaM3YSYuSOUAo/FbVPRUk4N2epNors+FUClj0ES6YKT+zDKFQPMRDGfcHA+JWSBTr+A+Mkbthqigh+Beu6D/+453ENLfE8jIikICKYp1qcpYs/eR0IL15C8r8g6e+Be42MJo5hEvpt5/ITkTsdWh5dYpfeDbgZQKXsmVLy5/T3LufBun9Kh7zk6gyhCPqH5+MOSytA9cOhH/iJrL1k/Qwi7Rjb7gIwV1UvaAR9UZz+lih29NGIYz6yAHL94FjDQXf7EFSam7eYQVB7vnZHQUGL36UyAzpgWpcl4ABRKAAw2Q/9/g5Gdv1bgK3I11mPof3gxPiAakj+nDxt91ELxkC/5pAHei6B+Kz3skUfpTaFwqU9SeMBCWfp0gffAW+NbNZ0rFqVjnBWKSAnVtXFA7zFE+8XdaGV8JaY3aAismX/EWzQlhEm07Sjart7hRb/7/L2mrdf9ST1h1q2p/QoMLMXAc1S37BFCHB+kzCZEG/tCNNVVR9Np+AhrybNm/sgpyLFI94MiYbfvDp94Xi7XEVJLiXNsq/NaI7rZG5VKSLFsy8pHttRTdx+jKrYL4vyZ2EQHxZki06eGNnT9yZnyxDBcHSObol366vltKY6MrUn8eMs7YguSs2oS4BygpKs54EGMBddUTSfq/rpPtLzNvs9cPqKP4msmoJxh0ssTljaD/VOfG3RCeSFgFGEU0X0q3Sd8hmIXrcrX4TXxO/lnfT5FC+99MrtRC37wjaPX3Pye5CtRTRfSsT7Xg8F/7X/eswPKKMRRkZiVkqz2qFkpcMA/P4ixhG7ag+LtPCEgZpGBRcwHj+JFkcMw52Qo/vBe4hXWINsBgFVVH1gIs7YAAAAAAAAAAAAA==" style="height:24px;filter:brightness(0) invert(1)">
-    <span style="color:#C9A8F0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Verifikačný report</span>
-    <!-- PDF navigacia -->
-    <div id="pdfNav" style="display:flex;align-items:center;gap:8px;margin-left:auto">
-      <span style="color:#C9A8F0;font-size:11px">Strana:</span>
-      <button onclick="pdfPrevPage()" style="background:#3D2B6B;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px">&#8592;</button>
-      <span id="pdfPageInfo" style="color:#fff;font-size:12px;min-width:50px;text-align:center">1 / 1</span>
-      <button onclick="pdfNextPage()" style="background:#3D2B6B;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px">&#8594;</button>
-    </div>
-    <button onclick="closeVerReport()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:6px;padding:5px 14px;cursor:pointer;font-size:13px;margin-left:12px">&#10005; Zavrieť</button>
-  </div>
-
-  <!-- Dva panely pod toolbarom - resizable -->
-  <div id="verPanels" style="position:absolute;top:48px;left:0;right:0;bottom:0;display:flex">
-
-    <!-- LAVA: PDF -->
-    <div id="verLeft" style="overflow-y:auto;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;padding:20px;gap:16px;width:58%;min-width:20%;max-width:80%">
-      <canvas id="pdfCanvas" style="width:100%;max-width:900px;box-shadow:0 4px 24px rgba(0,0,0,0.6);border-radius:4px"></canvas>
-      <div id="pdfPlaceholder" style="display:none;color:#7A6A92;font-size:13px;text-align:center;padding:80px 20px">
-        <div style="font-size:48px;margin-bottom:16px">&#128247;</div>
-        <div>Nahľad nie je dostupny pre tento format suboru</div>
-      </div>
-    </div>
-
-    <!-- DIVIDER - draggable -->
-    <div id="verDivider" style="width:6px;background:#3D2B6B;cursor:col-resize;flex-shrink:0;transition:background 0.2s;position:relative"
-      onmouseenter="this.style.background='#6B4FA0'"
-      onmouseleave="this.style.background=isDragging?'#6B4FA0':'#3D2B6B'">
-      <!-- Grip handle -->
-      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:3px">
-        <div style="width:2px;height:20px;background:rgba(255,255,255,0.3);border-radius:1px"></div>
-      </div>
-    </div>
-
-    <!-- PRAVA: Report -->
-    <div id="verRight" style="overflow-y:auto;background:#fff;flex:1;min-width:20%">
-      <div id="verReportContent" style="padding:20px"></div>
-    </div>
-
-  </div>
-</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
@@ -245,8 +186,8 @@ function renderPdfPage(num) {
   pdfDoc.getPage(num).then(function(page) {
     var canvas = document.getElementById("pdfCanvas");
     var ctx = canvas.getContext("2d");
-    // Sirka panelu - priblizne 60% okna
-    var panelWidth = Math.floor(window.innerWidth * 0.60) - 40;
+    var leftPanel = document.getElementById("verLeft");
+    var panelWidth = leftPanel ? leftPanel.offsetWidth - 40 : Math.floor(window.innerWidth * 0.55) - 40;
     var baseViewport = page.getViewport({scale: 1});
     var scale = panelWidth / baseViewport.width;
     var viewport = page.getViewport({scale: scale});
@@ -375,13 +316,13 @@ async function extract() {
     currentData = json.data;
     chatHistory = [];
 
-    renderVerSidebar(currentData);
-    renderWarnings(currentData);
-    
-    
-
-    document.getElementById("chatBox").innerHTML = '<div class="msg msg-ai"><div class="bubble">Extrakcia hotová. Napíšte čo chcete zmeniť.</div></div>';
     document.getElementById("resultSection").style.display = "block";
+    document.getElementById("chatBox").innerHTML = '<div class="msg msg-ai"><div class="bubble">Extrakcia hotová. Napíšte čo chcete zmeniť.</div></div>';
+    document.getElementById("chatSection").style.display = "none";
+    document.getElementById("chatToggleBtn").classList.remove("active");
+    document.getElementById("chatToggleBtn").innerHTML = "&#9998; Upraviť dáta";
+    showVerReport();
+    renderWarnings(currentData);
 
     var ver = currentData.verification || {};
     if (ver.has_errors) {
@@ -395,21 +336,9 @@ async function extract() {
   document.getElementById("extractBtn").disabled = false;
 }
 
-function renderVerSidebar(data) {
-  var params = data.parameters || [];
-  var excluded = data.excluded || [];
-  var html = '<div class="ver-summary">';
-  html += '<div class="ver-row"><span class="ver-label">Parametrov v XLSX</span><span style="font-weight:700;color:#3D2B6B">' + params.length + '</span></div>';
-  html += '<div class="ver-row"><span class="ver-label">Vylucených</span><span style="color:#C62828;font-weight:700">' + excluded.length + '</span></div>';
-  html += '</div>';
-  html += '<div style="font-size:11px;color:#7A6A92;margin-top:10px;text-align:center">Otvorte Ver. report pre detailne porovnanie originálu a XLSX</div>';
-  document.getElementById("verBox").innerHTML = html;
-}
-
 function showVerReport() {
   if (!currentData) return;
   loadPdfForViewer();
-  document.getElementById("verPopup").style.display = "block";
 
   var d = currentData;
   var params = d.parameters || [];
@@ -553,10 +482,13 @@ function showVerReport() {
 
   document.getElementById("verReportContent").innerHTML = html;
 }
-function closeVerReport() {
-  document.getElementById("verPopup").style.display = "none";
-  pdfDoc = null;
-  pdfPage = 1;
+function toggleChat() {
+  var section = document.getElementById("chatSection");
+  var btn = document.getElementById("chatToggleBtn");
+  var open = section.style.display !== "none";
+  section.style.display = open ? "none" : "block";
+  btn.classList.toggle("active", !open);
+  btn.innerHTML = open ? "&#9998; Upraviť dáta" : "&#10005; Zavrieť úpravy";
 }
 
 // História
@@ -616,7 +548,7 @@ async function sendChat() {
     removeTyping();
     chatHistory.push({role:"assistant", content:"Hotovo."});
     addMsg("ai", "Hotovo! Dáta aktualizované.");
-    renderVerSidebar(currentData);
+    showVerReport();
     renderWarnings(currentData);
     
     
