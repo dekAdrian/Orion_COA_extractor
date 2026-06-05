@@ -124,6 +124,12 @@ h1{font-size:22px;font-weight:700;color:#3D2B6B;margin-bottom:3px}
     <!-- Status -->
     <div id="statusBar" style="display:none" class="status"></div>
 
+    <!-- Warning banner -->
+    <div id="warningBanner" style="display:none" class="card" id="warningBanner">
+      <div class="sec" style="color:#C62828">&#9888; Upozornenia</div>
+      <div id="warningContent"></div>
+    </div>
+
     <!-- Result -->
     <div id="resultSection" style="display:none">
 
@@ -370,6 +376,7 @@ async function extract() {
     chatHistory = [];
 
     renderVerSidebar(currentData);
+    renderWarnings(currentData);
     
     
 
@@ -563,6 +570,25 @@ function closeVerReport() {
 
 
 
+function renderWarnings(data) {
+  var warnings = (data && data.sanity_warnings) || [];
+  var banner  = document.getElementById("warningBanner");
+  var content = document.getElementById("warningContent");
+  if (warnings.length === 0) { banner.style.display = "none"; return; }
+  var html = "";
+  var colors = { error: ["#FCE4EC","#F48FB1"], warning: ["#FFF8E1","#FFD54F"], info: ["#E3F2FD","#90CAF9"] };
+  var icons  = { error: "&#128308;", warning: "&#9888;", info: "&#8505;" };
+  for (var i = 0; i < warnings.length; i++) {
+    var w = warnings[i];
+    var c = colors[w.level] || colors["warning"];
+    html += "<div style='padding:9px 12px;background:" + c[0] + ";border:1.5px solid " + c[1] + ";border-radius:6px;margin-bottom:6px;font-size:12px;font-weight:500'>";
+    html += (icons[w.level] || "&#9888;") + " " + w.msg;
+    html += "</div>";
+  }
+  content.innerHTML = html;
+  banner.style.display = "block";
+}
+
 // Chat
 async function sendChat() {
   var input = document.getElementById("chatInput");
@@ -591,6 +617,7 @@ async function sendChat() {
     chatHistory.push({role:"assistant", content:"Hotovo."});
     addMsg("ai", "Hotovo! Dáta aktualizované.");
     renderVerSidebar(currentData);
+    renderWarnings(currentData);
     
     
   } catch(e) {
