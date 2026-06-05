@@ -39,6 +39,8 @@ ALWAYS EXCLUDE from output (put in excluded list, NOT in extraMeta):
 - Laboratory accreditation info, RvA numbers, SGS certifications
 - Any person name associated with lab work (analyst, QC manager signatures, Operator, Auditor)
 - Disclaimer and confidentiality text
+- Company stamp / supplier stamp entries (e.g. "FARAVELLI Group | PRODUCT CODE | INTERNAL BATCH | CONTROLLED BY") → reason: supplier_info
+- Internal batch numbers or codes from the SUPPLIER's system (not the product batch number)
 - Place of manufacture (manufacturing facility address)
 - Transportation, Packaging logistics info (how goods are transported/packaged)
 - Storage and Handling logistics table (but DO extract the actual storage temperature/conditions into storageConditions)
@@ -340,14 +342,27 @@ class handler(BaseHTTPRequestHandler):
             extracted = json.loads(raw)
 
             # Merge allTexts do notes — záchranná sieť pre remarks ktoré Claude zabudol
+            # Preskočí texty ktoré Claude už dal do excluded (supplier, lab, personnel info)
+            excluded_reasons = {"supplier_info", "lab_info", "lab_personnel",
+                                "lab_order_info", "customer_info", "logistics_info"}
+            excluded_vals = set()
+            for e in (extracted.get("excluded") or []):
+                if e.get("reason","") in excluded_reasons:
+                    excluded_vals.add(str(e.get("value","")).strip().lower())
+
             all_texts = extracted.get("allTexts") or []
             notes = extracted.get("notes") or ""
             for item in all_texts:
                 text = str(item.get("text", "")).strip()
                 label = str(item.get("label", "")).strip()
-                if text and text not in notes:
-                    entry = f"{label}: {text}" if label else text
-                    notes = (notes + "\n" + entry).strip() if notes else entry
+                if not text or text in notes:
+                    continue
+                # Preskočí ak text obsahuje niečo z excluded hodnôt
+                text_lower = text.lower()
+                if any(ev and ev in text_lower for ev in excluded_vals):
+                    continue
+                entry = f"{label}: {text}" if label else text
+                notes = (notes + "\n" + entry).strip() if notes else entry
             extracted["notes"] = notes
 
             # Verifikácia
