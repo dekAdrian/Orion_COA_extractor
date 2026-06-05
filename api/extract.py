@@ -60,7 +60,18 @@ COLUMN DETECTION RULES:
 2. With method 4-col: Parameter | Method | Specification | Result → has_method_column=true
 3. With unit 4-col: Parameter | Unit | Min/Max | Result → has_unit_column=true
 4. Sensient 5-col: Test | Min Value | Max Value | Test Value | Method → combine Min+Max into "MinVal / MaxVal unit", result=Test Value, has_method_column=true
-5. Donauchem 5-col: Characteristic | Unit | Value | Limit lower | Limit higher → min_max="LimitLower / LimitHigh unit", result=Value, has_unit_column=true; method is sub-row under parameter name
+5. Donauchem 5-col: Characteristic | Unit | Value | Limit lower | Limit higher:
+   - result = Value column
+   - has_unit_column = true
+   - method = sub-row text under parameter name (e.g. "GM001 all.03")
+   - min_max rules:
+     * If Limit lower = 0 or empty AND Limit higher has value → "≤ X" (only max, NO unit — unit goes in unit field)
+     * If both limits are different numbers → "X – Y" (NO unit in min_max — unit goes in unit field separately)
+     * If both limits are identical text (e.g. "conform to std") → use that text once, not duplicated
+     * If both limits are identical value → use "≤ X" or just the value once
+     * NEVER write "text / same text" — if both sides are same, write once
+     * NEVER add unit to min_max when has_unit_column=true — unit belongs in the unit field only
+     * ÷ symbol used as range separator → treat same as –
 6. REVERSED columns (Result BEFORE Specification, e.g. "Parameters | %Result | %Specification") → ALWAYS correctly assign: Specification to min_max, Result to result
 7. When in doubt which column is result vs spec: the one with ACTUAL MEASURED VALUES is result, the one with LIMITS/RANGES is min_max
 
@@ -157,7 +168,12 @@ Return this JSON:
 
 RULES:
 - status: pass=within spec, fail=outside spec, info=Conforms/Complies/Passes test/not applicable
-- min_max: normalized combined spec. When BOTH min and max exist: "55.0 / 70.0 %". When ONLY max exists: "≤ 1 mg KOH/g" or "max. 2000 CFU/g" (NO dash-slash, just the operator+value). When ONLY min exists: "≥ 99.0%" or "min. 50%". Never use "- / X" format.
+- min_max: copy the specification EXACTLY as written in the original document — do NOT reformat, do NOT add units, do NOT change operators, do NOT combine columns. Just copy the text as-is from the Specification/Limit column.
+- result: copy the result EXACTLY as written in the original document.
+- raw_min_max: identical to min_max (exact copy from original)
+- raw_result: identical to result (exact copy from original)
+- ONLY change: European comma decimal separator → dot: "0,58" → "0.58", "99,76" → "99.76"
+- Do NOT: add units that are not in the spec column, change "≥99.0%" to ">99%", add "%" if not present, combine separate limit columns into one string with artificial formatting
 - result: value + unit together unless separate unit column
 - supplier: extract for internal reference only, NOT in output files
 - notes: product notes and footnote explanations only ("* tested annually", "(1) external lab")
