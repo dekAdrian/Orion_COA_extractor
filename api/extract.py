@@ -56,24 +56,35 @@ ALWAYS INCLUDE in extraMeta (product-specific fields only):
 - Antioxidants, Colorant (for oils)
 
 COLUMN DETECTION RULES:
-1. Standard 3-col: Parameter | Specification | Result → min_max=Specification, result=Result
-2. With method 4-col: Parameter | Method | Specification | Result → has_method_column=true
-3. With unit 4-col: Parameter | Unit | Min/Max | Result → has_unit_column=true
-4. Sensient 5-col: Test | Min Value | Max Value | Test Value | Method → combine Min+Max into "MinVal / MaxVal unit", result=Test Value, has_method_column=true
-5. Donauchem 5-col: Characteristic | Unit | Value | Limit lower | Limit higher:
-   - result = Value column
-   - has_unit_column = true
-   - method = sub-row text under parameter name (e.g. "GM001 all.03")
-   - min_max rules:
-     * If Limit lower = 0 or empty AND Limit higher has value → "≤ X" (only max, NO unit — unit goes in unit field)
-     * If both limits are different numbers → "X – Y" (NO unit in min_max — unit goes in unit field separately)
-     * If both limits are identical text (e.g. "conform to std") → use that text once, not duplicated
-     * If both limits are identical value → use "≤ X" or just the value once
-     * NEVER write "text / same text" — if both sides are same, write once
-     * NEVER add unit to min_max when has_unit_column=true — unit belongs in the unit field only
-     * ÷ symbol used as range separator → treat same as –
-6. REVERSED columns (Result BEFORE Specification, e.g. "Parameters | %Result | %Specification") → ALWAYS correctly assign: Specification to min_max, Result to result
-7. When in doubt which column is result vs spec: the one with ACTUAL MEASURED VALUES is result, the one with LIMITS/RANGES is min_max
+1. Standard 3-col: Parameter | Specification | Result
+   → min_max=Specification, result=Result, has_method_column=false, has_separate_minmax=false
+
+2. With method 4-col: Parameter | Specification | Result | Method  (or Method before Spec)
+   → min_max=Specification, result=Result, method=Method, has_method_column=true, has_separate_minmax=false
+
+3. With separate Min+Max 5-col: Parameter | Min Value | Max Value | Test Value | Method
+   → min_value=MinValue, max_value=MaxValue, result=TestValue, method=Method
+   → has_method_column=true, has_separate_minmax=true
+   → min_max="" (leave empty — generator will use min_value + max_value separately)
+
+4. With unit 4-col: Parameter | Unit | Specification | Result
+   → unit=Unit, min_max=Specification, result=Result, has_unit_column=true
+
+5. Donauchem 5-col: Characteristic | Unit | Value | Limit lower | Limit higher
+   → unit=Unit, result=Value, has_unit_column=true, has_separate_minmax=true
+   → min_value=LimitLower, max_value=LimitHigher
+   → method = text on sub-row under parameter name (e.g. "GM001 all.03")
+   → Copy values EXACTLY as written — do not modify or combine
+
+6. REVERSED columns (Result BEFORE Specification)
+   → Always correctly identify: Specification→min_max, Result→result regardless of column order
+
+COPY VALUES EXACTLY:
+- Copy all values exactly as written in the original document
+- Only change: European comma decimal → dot: "0,58" → "0.58"
+- Do NOT add units, change operators, or reformat values
+- raw_min_max = exact original text, min_max = same (with comma→dot only)
+- raw_result = exact original text, result = same (with comma→dot only)
 
 SECTION HEADERS vs PARAMETERS:
 - Rows with ONLY a name and NO spec/result values are SECTION HEADERS — NOT parameters
@@ -136,6 +147,9 @@ Return this JSON:
   "description": "",
   "extraMeta": {},
   "notes": "",
+  "allTexts": [
+    {"label": "", "text": ""}
+  ],
   "supplier": "",
   "excluded": [
     {"field": "", "value": "", "reason": ""}
@@ -148,6 +162,7 @@ Return this JSON:
     "max_method_chars": 0,
     "has_unit_column": false,
     "has_method_column": false,
+    "has_separate_minmax": false,
     "has_sections": false,
     "sections": []
   },
@@ -158,6 +173,8 @@ Return this JSON:
       "unit": "",
       "raw_min_max": "",
       "raw_result": "",
+      "min_value": "",
+      "max_value": "",
       "min_max": "",
       "result": "",
       "method": "",
@@ -176,8 +193,17 @@ RULES:
 - Do NOT: add units that are not in the spec column, change "≥99.0%" to ">99%", add "%" if not present, combine separate limit columns into one string with artificial formatting
 - result: value + unit together unless separate unit column
 - supplier: extract for internal reference only, NOT in output files
-- notes: product notes and footnote explanations only ("* tested annually", "(1) external lab")
+- notes: capture EVERY piece of text from the document that is not a standard parameter row, meta field, or header. This includes:
+  * Free text below/above tables: "Remarks:", "Note:", "Conclusion:", "Comments:", "Information:", disclaimers
+  * Text INSIDE tables that is not a parameter: rows like "Remarks: NaCl to be calculated as on dry basis"
+  * Footnote explanations: "* tested annually", "(1) performed by external lab"
+  * Regulatory compliance statements: "Comply with EC regulation 231/2012"
+  * Any row in the parameter table that has text spanning full width without spec/result values
+  * Concatenate all such texts with newline separator
+  * Do NOT include storageConditions text (that goes in storageConditions field separately)
+  * When in doubt — include it in notes rather than lose it
 - Preserve footnote markers * ** 1 2 in parameter names
+- allTexts: list of ALL free text blocks found in document (every non-table text), each with label and text. Examples: {"label": "Remarks", "text": "NaCl to be calculated as on dry basis."}, {"label": "Conclusion", "text": "Conform to specification."}, {"label": "Note", "text": "* tested annually"}. This is the complete text inventory for audit purposes.
 - excluded reasons: "supplier_info", "lab_info", "lab_appendix", "lab_personnel", "lab_order_info", "customer_info", "logistics_info"
 - Fatty acid appendix → ONE entry: {"field": "Fatty acid profile (detail)", "value": "X rows", "reason": "lab_appendix"}
 - Section header rows (no values) → has_sections=true, NOT in parameters list
