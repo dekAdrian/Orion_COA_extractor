@@ -79,6 +79,11 @@ COLUMN DETECTION RULES:
 6. REVERSED columns (Result BEFORE Specification)
    → Always correctly identify: Specification→min_max, Result→result regardless of column order
 
+LAYOUT CONFIDENCE — set layout.layout_confidence:
+- "high": document clearly matches one of the 6 layouts above (certain about column mapping)
+- "medium": recognizable structure but with unusual column names or minor variations
+- "low": unknown/unusual layout not matching any known pattern, ambiguous columns, or table structure is unclear
+
 COPY VALUES EXACTLY:
 - Copy all values exactly as written in the original document
 - Only change: European comma decimal → dot: "0,58" → "0.58"
@@ -155,6 +160,7 @@ Return this JSON:
     {"field": "", "value": "", "reason": ""}
   ],
   "layout": {
+    "layout_confidence": "high",
     "max_param_chars": 30,
     "max_minmax_chars": 20,
     "max_result_chars": 15,
@@ -214,6 +220,41 @@ RULES:
 - IMPORTANT: Do NOT put explanatory comments in excluded like "THIS IS EXPIRY DATE". Excluded entries should be actual field names and values from the document.
 
 filename: {filename}"""
+
+def _sanity_check(data):
+    warnings = []
+    params   = data.get("parameters", [])
+    conf     = data.get("layout", {}).get("layout_confidence", "high")
+
+    if len(params) == 0:
+        warnings.append({"level": "error",
+            "msg": "Žiadne parametre neboli extrahované — certifikát nebol rozpoznaný"})
+    elif len(params) < 3:
+        warnings.append({"level": "warning",
+            "msg": f"Iba {len(params)} parameter(e) — skontrolujte výsledok"})
+
+    if params:
+        empty = sum(1 for p in params if not str(p.get("result","")).strip())
+        if empty / len(params) > 0.4:
+            warnings.append({"level": "warning",
+                "msg": f"{empty} z {len(params)} parametrov nemá vyplnený výsledok"})
+
+    if conf == "low":
+        warnings.append({"level": "error",
+            "msg": "Neznámy formát certifikátu — Claude si nie je istý mapovaním stĺpcov, skontrolujte všetky dáta"})
+    elif conf == "medium":
+        warnings.append({"level": "warning",
+            "msg": "Neštandardný formát certifikátu — odporúčame skontrolovať parametre"})
+
+    labels   = {"commonName": "Názov produktu", "batchNumber": "Batch number",
+                "retestDate": "Dátum expirácie"}
+    missing  = [labels[f] for f in labels if not str(data.get(f,"")).strip()]
+    if missing:
+        warnings.append({"level": "warning",
+            "msg": "Chýbajúce povinné polia: " + ", ".join(missing)})
+
+    return warnings
+
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -309,6 +350,7 @@ class handler(BaseHTTPRequestHandler):
                 "issues": param_issues + meta_issues,
                 "has_errors": any(i.get("note") for i in param_issues + meta_issues)
             }
+            extracted["sanity_warnings"] = _sanity_check(extracted)
 
             self._json(200, {"data": extracted})
 
