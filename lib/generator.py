@@ -201,8 +201,8 @@ def verify_parameters(parameters):
         # Min/max separator: "55.0 / 70.0 %" alebo "- / 1.0 mg/kg"
         # Jednotka: "≤1000CFU/g" alebo "≤100cfu/ml"
         def is_minmax_separator(s):
-            # Hladame vzor: cislo/operator MEDZERA / MEDZERA cislo/operator
-            return bool(re.search(r"(\d|-)\s*/\s*(\d|-|nd|ND)", s))
+            # Rozlisuje "55.0 / 70.0" alebo "≥55 / ≤70" (min/max) od "CFU/g" (jednotka bez medzier)
+            return bool(re.search(r"(?:[≥>≤<]?\s*[\d.]|-)\s+/\s+(?:[≥>≤<]?\s*[\d.]|-|\b(?:nd|ND|not\s+detected)\b)", s))
 
         if is_minmax_separator(min_max):
             parts = min_max.split("/")
@@ -374,14 +374,12 @@ def generate_xlsx(data, output_path):
     ws.row_dimensions[row].height = 20
     ws.merge_cells(f"A{row}:B{row}")
     if lo["has_sep_mm"] and lo["has_method"]:
-        # 5 stlpcov: PARAMETER | MIN VALUE | MAX VALUE | TEST VALUE | METHOD
+        # min+max zlucime do C, D=TEST VALUE, E=METHOD — vsetko sa zmesti do 5 stlpcov
+        hdrs = [("A","PARAMETER","left"),("C","MIN / MAX","center"),
+                ("D","TEST VALUE","center"),("E","METHOD","center")]
+    elif lo["has_sep_mm"]:
         hdrs = [("A","PARAMETER","left"),("C","MIN VALUE","center"),
                 ("D","MAX VALUE","center"),("E","TEST VALUE","center")]
-        # Method pojde do extra stlpca - pridame F
-    elif lo["has_sep_mm"]:
-        # 5 stlpcov bez method: PARAMETER | MIN VALUE | MAX VALUE | RESULT
-        hdrs = [("A","PARAMETER","left"),("C","MIN VALUE","center"),
-                ("D","MAX VALUE","center"),("E","RESULT","center")]
     elif lo["has_unit"]:
         hdrs = [("A","PARAMETER","left"),("C","UNIT","center"),
                 ("D","SPECIFICATION","left"),("E","RESULT","center")]
@@ -431,9 +429,10 @@ def generate_xlsx(data, output_path):
         c.border = _bdr()
 
         if lo["has_sep_mm"] and lo["has_method"]:
-            vals = [("C",p.get("min_value",""),False,MUTED,"center"),
-                    ("D",p.get("max_value",""),False,MUTED,"center"),
-                    ("E",p.get("result",""),True,TEXT,"center")]
+            mm = " – ".join(v for v in [str(p.get("min_value","")), str(p.get("max_value",""))] if v)
+            vals = [("C", mm, False, MUTED, "center"),
+                    ("D", p.get("result",""), True, TEXT, "center"),
+                    ("E", p.get("method",""), False, MUTED, "center")]
         elif lo["has_sep_mm"]:
             vals = [("C",p.get("min_value",""),False,MUTED,"center"),
                     ("D",p.get("max_value",""),False,MUTED,"center"),
@@ -645,6 +644,11 @@ def generate_ods(data, output_path):
         r.addElement(cell("UNIT",      S["th_c"]))
         r.addElement(cell("MIN / MAX", S["th"]))
         r.addElement(cell("RESULT",    S["th_c"]))
+    elif lo["has_sep_mm"]:
+        r.addElement(cell("PARAMETER",  S["th"], span=2)); r.addElement(odftable.CoveredTableCell())
+        r.addElement(cell("MIN / MAX",  S["th"]))
+        r.addElement(cell("TEST VALUE", S["th_c"]))
+        r.addElement(cell("METHOD" if lo["has_method"] else "", S["th_c"]))
     elif lo["has_method"]:
         r.addElement(cell("PARAMETER",    S["th"], span=2)); r.addElement(odftable.CoveredTableCell())
         r.addElement(cell("SPECIFICATION",S["th"]))
@@ -682,6 +686,12 @@ def generate_ods(data, output_path):
             r.addElement(cell(p.get("unit",""),   ms))
             r.addElement(cell(p.get("min_max",""),ms))
             r.addElement(cell(p.get("result",""), rs2))
+        elif lo["has_sep_mm"]:
+            mm = " – ".join(v for v in [str(p.get("min_value","")), str(p.get("max_value",""))] if v)
+            r.addElement(cell(mm, ms))
+            r.addElement(cell(p.get("result",""), rs2))
+            r.addElement(cell(p.get("method","") if lo["has_method"] else icon,
+                              ms if lo["has_method"] else ics))
         elif lo["has_method"]:
             r.addElement(cell(p.get("min_max",""),ms))
             r.addElement(cell(p.get("result",""), rs2))
