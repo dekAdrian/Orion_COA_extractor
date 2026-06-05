@@ -47,6 +47,11 @@ def _bdr(c=BORDER):
     s = Side(style="thin", color=c)
     return Border(left=s, right=s, top=s, bottom=s)
 
+def _fix_right(ws, col, row, c=BORDER):
+    """Opraví chýbajúci pravý okraj na poslednej bunke zlúčeného rozsahu."""
+    s = Side(style="thin", color=c)
+    ws[f"{col}{row}"].border = Border(right=s, top=s, bottom=s)
+
 def _fill(c):
     return PatternFill(fill_type="solid", fgColor=c)
 
@@ -364,6 +369,7 @@ def generate_xlsx(data, output_path):
         c.fill  = _fill(META_VAL)
         c.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True, indent=1)
         c.border = _bdr()
+        _fix_right(ws, "E", row)
         row += 1
 
     # Description
@@ -376,6 +382,7 @@ def generate_xlsx(data, output_path):
         c.font  = Font(name="Calibri", size=8, italic=True, color=MUTED)
         c.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True, indent=1)
         c.border = _bdr()
+        _fix_right(ws, "E", row)
         row += 1
 
     # Spacer
@@ -426,6 +433,7 @@ def generate_xlsx(data, output_path):
             c.fill  = _fill(SECTION_BG)
             c.alignment = Alignment(horizontal="left", vertical="center", indent=2)
             c.border = _bdr("B0A0C8")
+            _fix_right(ws, "E", row, "B0A0C8")
             row += 1
 
         if lo["has_sep_mm"] and lo["has_method"]:
@@ -500,6 +508,7 @@ def generate_xlsx(data, output_path):
             c.alignment = Alignment(horizontal="left", vertical="center",
                                     wrap_text=True, indent=1)
             c.border = _bdr()
+            _fix_right(ws, "E", row)
             row += 1
 
     # Footer

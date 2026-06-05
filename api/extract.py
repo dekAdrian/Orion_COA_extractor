@@ -27,7 +27,7 @@ FIELD MAPPING — always map these variants to our standard fields:
 
 ALWAYS EXCLUDE from output (put in excluded list, NOT in extraMeta):
 - Supplier name, manufacturer name, laboratory name, distributor name, company address
-- Country of origin
+- Company name printed at the TOP of the document as the issuing company header (e.g. "Nanjing Panda Biotechnology Co., Ltd", "Fenchem Biotek Ltd") → reason: supplier_info. This is different from the product's Country of Origin which MUST be kept.
 - Issue Date, Issue date (lab document date, NOT manufacture date)
 - writtenBy, approvedBy, signedBy, analyzedBy, checkedBy, controlledBy, Signed By
 - Kontroloval, Skontroloval, Vystavil, Schvalil, Vydal (Slovak/Czech lab personnel)
@@ -46,6 +46,7 @@ ALWAYS EXCLUDE from output (put in excluded list, NOT in extraMeta):
 - Storage and Handling logistics table (but DO extract the actual storage temperature/conditions into storageConditions)
 
 ALWAYS INCLUDE in extraMeta (product-specific fields only):
+- Country of Origin (e.g. "China", "Germany", "Netherlands") — ALWAYS keep this, never exclude it
 - QA Status (e.g. "Approved")
 - Food Safety Acceptance Criteria (e.g. "Meets UK and EU legislation")
 - Intended Use (e.g. "Food use")
@@ -86,6 +87,15 @@ COLUMN DETECTION RULES:
 
 7. REVERSED columns (Result BEFORE Specification)
    → Always correctly identify: Specification→min_max, Result→result regardless of column order
+
+BILINGUAL DOCUMENTS (Chinese/English or other language pairs):
+- When document contains both Chinese and English text, extract ONLY the English version
+- Translate any Chinese-only values or labels to English
+- Parameter names: use English version only (e.g. "砷/Arsenic" → "Arsenic")
+- Meta labels: use English version only (e.g. "批号/Batch No." → "Batch No.")
+- Values: "符合规定 Conforms" → "Conforms", "未检出 Not Detected" → "Not Detected"
+- Conclusion/notes text: translate to English if Chinese-only
+- Batch quantity (e.g. "20kg") → goes into notes, NOT into parameters
 
 LAYOUT CONFIDENCE — set layout.layout_confidence:
 - "high": document clearly matches one of the 6 layouts above (certain about column mapping)
